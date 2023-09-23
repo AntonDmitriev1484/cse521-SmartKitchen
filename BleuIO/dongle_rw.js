@@ -11,9 +11,23 @@ export default function init_bleuIO(portPath) {
       parity: "none",
       stopBits: 1,
     });
+    //port.setMaxListeners(20);
   
     const writeData = async (cmd) => {
+
+      // const listener = () => {
+      //   console.log('writing for command: '+cmd);
+      //   port.write(cmd + "\r\n", (err) => {
+      //     if (err) {
+      //       return console.log("Error writing data: ", err.message);
+      //     } else {
+      //       return console.log(cmd + " command written");
+      //     }
+      //   });
+      // }
+
       port.on("open", () => {
+        console.log('writing for command: '+cmd);
         port.write(cmd + "\r\n", (err) => {
           if (err) {
             return console.log("Error writing data: ", err.message);
@@ -25,52 +39,36 @@ export default function init_bleuIO(portPath) {
     };
   
     const readData = () => {
-      return new Promise(function (resolve, reject) {
-        port.on("readable", () => {
-          let data = port.read();
-          let enc = new TextDecoder();
-          let arr = new Uint8Array(data);
-          arr = enc.decode(arr);
-        let removeRn = arr.replace(/\r?\n|\r/gm, "\n");
-        if (removeRn != null) readDataArray.push(removeRn);
-        //   readDataArray.push(arr);
-          return resolve(readDataArray);
-        });
-      });
-    };
+      return new Promise(
+        (resolve, reject) => {
+
+          const listener = () => {
+            let data = port.read();
+            //port.removeListener('readable',listener);
+            let enc = new TextDecoder();
+            let arr = new Uint8Array(data);
+            arr = enc.decode(arr);
+            let removeRn = arr.replace(/\r?\n|\r/gm, "\n");
+            if (removeRn != null) readDataArray.push(removeRn);
+            return resolve(readDataArray);
+          };
+
+          port.on("readable", listener);
+        }
+        );
+    }
+
+        
+      
 
     // Added code: Wrapper functions around AT commands.
 
     const setCentralRole = () => {
-
         return writeData('AT+CENTRAL');
-
-        // new Promise((resolve, reject) => {
-        //     writeData('AT+CENTRAL')
-        //         .then(() => {
-        //             return readData(); // Return the inner promise
-        //         })
-        //         .then(() => {
-        //             resolve(); // Resolve the outer promise if both writeData and readData are successful
-        //         })
-        //         .catch(err => {
-        //             console.log(err);
-        //             reject(err); // Reject the outer promise if there's any error
-        //         });
-        // });
-
     }
 
-    const gapScan = () => {
-        return writeData('AT+GAPSCAN');
-        // new Promise( (resolve, reject) => {
-        //     writeData('AT+GAPSCAN').then ( () => {
-        //         resolve();
-        //     })
-        //     .catch ( (err) => {
-        //         reject();
-        //     })
-        // })
+    const gapScan = (seconds) => {
+        return writeData('AT+GAPSCAN+'+seconds);
     }
 
     return {
@@ -79,5 +77,6 @@ export default function init_bleuIO(portPath) {
       setCentralRole,
       gapScan
     };
+
   };
   
