@@ -8,11 +8,6 @@ const bleuIO = init_bleuIO(DEVICE_PATH);
 // Referencing commands in: https://www.bleuio.com/blog/indoor-positioning-systems-based-on-ble-beacons/
 // Need to manually write these commands: https://www.bleuio.com/getting_started/docs/commands/
 
-// Note: Issuing a filter by RSSI command seems a bit unnecessary
 
-await bleuIO.setCentralRole();
-let data = await bleuIO.readData();
-console.log('Setting central role '+data);
-await bleuIO.gapScan();
-data = await bleuIO.readData();
-console.log('Gapscan result '+data);
+try {
+    const portUtils = bleuIO(DEVICE_INSTANCE_PATH);
