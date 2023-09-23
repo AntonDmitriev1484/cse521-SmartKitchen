@@ -12,21 +12,26 @@ const bleuIO = init_bleuIO(DEVICE_PATH);
 
 await bleuIO.setCentralRole();
 let data = await bleuIO.readData();
-console.log('Setting central role '+data);
+console.log(data);
+// So its just not calling the event listener
+// port is NOT OPEN?
+await bleuIO.gapScan(3);
 
 // Its not writing gapScan?
 
+// Ok I think I need to switch writeData over to uses promises
+// this is bizzare
 
-try {
-  await bleuIO.gapScan(3);
-  data = await bleuIO.readData();
-  console.log('data received');
-  console.log(data);
-  parseGapScanData(data);
-}
-catch (err) {
-  console.log(err);
-}
+// try {
+//   await bleuIO.gapScan(3);
+//   let data2 = await bleuIO.readData();
+//   console.log('data received');
+//   console.log(data2);
+//   // parseGapScanData(data);
+// }
+// catch (err) {
+//   console.log(err);
+// }
 
 
 

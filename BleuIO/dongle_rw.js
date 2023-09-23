@@ -14,20 +14,10 @@ export default function init_bleuIO(portPath) {
     //port.setMaxListeners(20);
   
     const writeData = async (cmd) => {
-
-      // const listener = () => {
-      //   console.log('writing for command: '+cmd);
-      //   port.write(cmd + "\r\n", (err) => {
-      //     if (err) {
-      //       return console.log("Error writing data: ", err.message);
-      //     } else {
-      //       return console.log(cmd + " command written");
-      //     }
-      //   });
-      // }
+      console.log('starting '+cmd)
 
       port.on("open", () => {
-        console.log('writing for command: '+cmd);
+        console.log('writing command: '+cmd);
         port.write(cmd + "\r\n", (err) => {
           if (err) {
             return console.log("Error writing data: ", err.message);
