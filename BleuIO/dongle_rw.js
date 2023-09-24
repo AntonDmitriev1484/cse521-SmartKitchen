@@ -11,13 +11,9 @@ export default function init_bleuIO(portPath) {
       parity: "none",
       stopBits: 1,
     });
-    //port.setMaxListeners(20);
   
     const writeData = async (cmd) => {
-      console.log('starting '+cmd)
-
       port.on("open", () => {
-        console.log('writing command: '+cmd);
         port.write(cmd + "\r\n", (err) => {
           if (err) {
             return console.log("Error writing data: ", err.message);
@@ -29,44 +25,54 @@ export default function init_bleuIO(portPath) {
     };
   
     const readData = () => {
-      return new Promise(
-        (resolve, reject) => {
+      
+      return new Promise(function (resolve, reject) {
+        port.on("readable", () => {
+          let data = port.read();
+          let enc = new TextDecoder();
+          let arr = new Uint8Array(data);
+          arr = enc.decode(arr);
+        let removeRn = arr.replace(/\r?\n|\r/gm, "\n");
+        if (removeRn != null) readDataArray.push(removeRn);
+        //   readDataArray.push(arr);
+          return resolve(readDataArray);
+        });
+      });
+    };
 
-          const listener = () => {
-            let data = port.read();
-            //port.removeListener('readable',listener);
-            let enc = new TextDecoder();
-            let arr = new Uint8Array(data);
-            arr = enc.decode(arr);
-            let removeRn = arr.replace(/\r?\n|\r/gm, "\n");
-            if (removeRn != null) readDataArray.push(removeRn);
-            return resolve(readDataArray);
-          };
-
-          port.on("readable", listener);
-        }
-        );
+    const letRead = () => {
+      port.on("readable", () => {
+        let data = port.read();
+        let enc = new TextDecoder();
+        let arr = new Uint8Array(data);
+        arr = enc.decode(arr);
+        let removeRn = arr.replace(/\r?\n|\r/gm, "");
+        if (removeRn != null) readDataArray.push(removeRn);
+        console.log(readDataArray);
+      });
     }
 
-        
-      
+    //Maybe just constantly have this loop. So we get a full stream of responses from the device?
 
     // Added code: Wrapper functions around AT commands.
 
     const setCentralRole = () => {
+
         return writeData('AT+CENTRAL');
+
     }
 
-    const gapScan = (seconds) => {
-        return writeData('AT+GAPSCAN+'+seconds);
+    const gapScan = () => {
+        return writeData('AT+GAPSCAN');
+
     }
 
     return {
       writeData,
       readData,
       setCentralRole,
-      gapScan
+      gapScan,
+      letRead
     };
-
   };
   
