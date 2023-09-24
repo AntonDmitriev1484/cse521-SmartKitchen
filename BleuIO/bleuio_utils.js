@@ -11,6 +11,18 @@ export default function init_bleuIO(portPath) {
       parity: "none",
       stopBits: 1,
     });
+
+    // const openPort = async () => {
+    //   port.open((error) => {
+    //     if (error) {
+    //       console.error('Error opening port:', error);
+    //     } else {
+    //       console.log(`Port ${portPath} is open.`);
+    //       // Perform communication with the port here
+    //     }
+    //   });
+    // }
+
     port.on('open', () => console.log('Port open'));
   
     const writeData = async (cmd) => {
@@ -31,10 +43,13 @@ export default function init_bleuIO(portPath) {
         let info = new Uint8Array(data);
         info = enc.decode(info);
         console.log(info);
-        info = JSON.parse(info);
-
-        let scan = info;
-        onReadFunction(scan);
+        try {
+          info = JSON.parse(info);
+          
+          let scan = info;
+          onReadFunction(scan);
+        }
+        catch (err) {}
       });
     }
 
@@ -44,15 +59,19 @@ export default function init_bleuIO(portPath) {
         return writeData('AT+CENTRAL');
     }
 
-    const gapScan = () => {
-        return writeData('AT+GAPSCAN');
+    const gapScan = (interval) => {
+      // Does each gapscan only detect devices it previously hasn't?
+      // Need to figure out some way to clear that tracker.
+      
+        return writeData('AT+GAPSCAN='+interval);
+        //return writeData('AT+GAPSCAN');
     }
 
     return {
       writeData,
       setCentralRole,
       gapScan,
-      onReadableEvent
+      onReadableEvent,
     };
   };
   
