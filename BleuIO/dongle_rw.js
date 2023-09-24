@@ -4,6 +4,9 @@ import { SerialPort } from "serialport";
 
 export default function init_bleuIO(portPath) {
     let readDataArray = [];
+
+    let MAP_ADDR_TO_RSSI = {};
+
     const port = new SerialPort({
       path: portPath,
       baudRate: 115200,
@@ -40,15 +43,19 @@ export default function init_bleuIO(portPath) {
       });
     };
 
-    const letRead = () => {
+    const bindToOnRead = (onReadFunction) => {
+      // At the moment, the only readables are the gapscan results
       port.on("readable", () => {
-        let data = port.read();
+        let data = port.read(); 
         let enc = new TextDecoder();
-        let arr = new Uint8Array(data);
-        arr = enc.decode(arr);
-        let removeRn = arr.replace(/\r?\n|\r/gm, "");
-        if (removeRn != null) readDataArray.push(removeRn);
-        console.log(readDataArray);
+        let info = new Uint8Array(data);
+        info = enc.decode(info);
+        console.log(info);
+        info = JSON.parse(info);
+
+        let scan = info;
+        MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
+        // Update our map with this information
       });
     }
 
@@ -67,12 +74,16 @@ export default function init_bleuIO(portPath) {
 
     }
 
+    const getRSSI = (addr) => {
+      return MAP_ADDR_TO_RSSI[addr];
+    }
+
     return {
       writeData,
       readData,
       setCentralRole,
       gapScan,
-      letRead
+      bindToOnRead
     };
   };
   

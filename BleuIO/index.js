@@ -10,9 +10,17 @@ const bleuIO = init_bleuIO(DEVICE_PATH);
 
 // Note: Issuing a filter by RSSI command seems a bit unnecessary
 
-bleuIO.letRead(); // Prints out everything BleuIO outputs onto our terminal
+MAP_ADDR_TO_RSSI = {};
 
-//bleuIO.writeData('ATV1'); // Turn verbose mode on
+function onNewGapScan(scan) {
+  MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
+
+  console.log(scan);
+}
+
+bleuIO.bindToOnRead(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
+
+//bleuIO.writeData('ATV1'); // Turned verbose mode on
 await bleuIO.setCentralRole();
 
 //let data = await bleuIO.readData();
