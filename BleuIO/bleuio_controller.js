@@ -27,7 +27,8 @@ export default async function CreateScanner(bleuIO_device_path, interval) {
   // Problem: This doesn't really let us detect distractors
 
   // Surely there must be some way to just re-scan everything at a specific interval
-  
+  // Figure out how to ssh into the dongle
+  // try issuing commands from there.
 
   bleuIO.onReadableEvent(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
 
