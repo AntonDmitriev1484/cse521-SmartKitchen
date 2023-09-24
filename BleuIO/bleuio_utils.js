@@ -79,6 +79,10 @@ export default function init_bleuIO(portPath) {
   // Ok as illustrated by the Serial terminal
   // It re-scans everything with each gapscan
 
+  // EVERYTHING WAS WORKING THE WAY YOU EXPECTED IT TO
+  // IT JUST WASN'T IN VERBOSE MODE SO NOTHING
+  // WAS PARSING AND BEING ADDED TO THE MAP
+
   /*
   AT+GAPSCAN
 {"C":2,"cmd":"AT+GAPSCAN"}

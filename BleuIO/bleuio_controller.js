@@ -33,7 +33,7 @@ export default async function CreateScanner(bleuIO_device_path, interval) {
   bleuIO.onReadableEvent(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
 
   //await bleuIO.openPort();
-  //bleuIO.writeData('ATV1'); // Turned verbose mode on/off
+  await bleuIO.writeData('ATV1'); // Turned verbose mode on/off
   await bleuIO.setCentralRole(); // This isnt working - the port.on listener is also not running.
 
   setInterval( async () => {
