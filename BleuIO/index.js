@@ -1,30 +1,35 @@
-import init_bleuIO from './dongle_rw.js'
+import init_bleuIO from './bleuio_utils.js'
 
 // const DEVICE_PATH = 'dev/...'; // Linux devices use dev/...
 const DEVICE_PATH = 'COM4'; // Windows devices use COM
 const bleuIO = init_bleuIO(DEVICE_PATH);
 
-// Sometimes you just need to run the node script through elevated (run as admin) command prompt?
-// Referencing commands in: https://www.bleuio.com/blog/indoor-positioning-systems-based-on-ble-beacons/
-// Need to manually write these commands: https://www.bleuio.com/getting_started/docs/commands/
+// Ok I'll figure out all the parallelism involved later
+// this is enough to test with one sensor for now.
+// Maybe just wrap this ina BLEUIO controller json
+// and you'll be able to spin these up elsewhere
 
-// Note: Issuing a filter by RSSI command seems a bit unnecessary
+let MAP_ADDR_TO_RSSI = {};
 
-MAP_ADDR_TO_RSSI = {};
-
+// Each time a gap scan result is printed on the terminal it will update our table
 function onNewGapScan(scan) {
   MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
-
   console.log(scan);
+  // No way of pruning a BLE device that has gone offline from the map
+  // but I think that should be fine
 }
 
-bleuIO.bindToOnRead(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
+// Lets you read the current map from another file
+function fetchRSSIMap() {
+  return MAP_ADDR_TO_RSSI;
+}
 
-//bleuIO.writeData('ATV1'); // Turned verbose mode on
+bleuIO.onReadableEvent(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
+
+//bleuIO.writeData('ATV1'); // Turned verbose mode on/off
 await bleuIO.setCentralRole();
 
-//let data = await bleuIO.readData();
-await bleuIO.gapScan(3);
-//data = await bleuIO.readData();
-
-//Ok, so it was actually just working the whole time, but the person who wrote this API is a little stupid.
+const SCAN_INTERVAL = 3;
+setInterval( async () => {
+  await bleuIO.gapScan(SCAN_INTERVAL); // Run gap scans at 3 sec interval
+}, SCAN_INTERVAL*1000);

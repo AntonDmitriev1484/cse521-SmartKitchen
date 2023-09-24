@@ -1,12 +1,9 @@
 import { SerialPort } from "serialport";
 
 // SOURCE: https://github.com/smart-sensor-devices-ab/bleuio-nodejs-library/blob/master/index.js
+// Ok the person who wrote this package did not know what they were doing ngl
 
 export default function init_bleuIO(portPath) {
-    let readDataArray = [];
-
-    let MAP_ADDR_TO_RSSI = {};
-
     const port = new SerialPort({
       path: portPath,
       baudRate: 115200,
@@ -14,9 +11,9 @@ export default function init_bleuIO(portPath) {
       parity: "none",
       stopBits: 1,
     });
+    port.on('open', () => console.log('Port open'));
   
     const writeData = async (cmd) => {
-      port.on("open", () => {
         port.write(cmd + "\r\n", (err) => {
           if (err) {
             return console.log("Error writing data: ", err.message);
@@ -24,26 +21,9 @@ export default function init_bleuIO(portPath) {
             return console.log(cmd + " command written");
           }
         });
-      });
-    };
-  
-    const readData = () => {
-      
-      return new Promise(function (resolve, reject) {
-        port.on("readable", () => {
-          let data = port.read();
-          let enc = new TextDecoder();
-          let arr = new Uint8Array(data);
-          arr = enc.decode(arr);
-        let removeRn = arr.replace(/\r?\n|\r/gm, "\n");
-        if (removeRn != null) readDataArray.push(removeRn);
-        //   readDataArray.push(arr);
-          return resolve(readDataArray);
-        });
-      });
     };
 
-    const bindToOnRead = (onReadFunction) => {
+    const onReadableEvent = (onReadFunction) => {
       // At the moment, the only readables are the gapscan results
       port.on("readable", () => {
         let data = port.read(); 
@@ -54,36 +34,25 @@ export default function init_bleuIO(portPath) {
         info = JSON.parse(info);
 
         let scan = info;
-        MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
-        // Update our map with this information
+        onReadFunction(scan);
       });
     }
 
-    //Maybe just constantly have this loop. So we get a full stream of responses from the device?
-
-    // Added code: Wrapper functions around AT commands.
+    // AT Commands: https://www.bleuio.com/getting_started/docs/commands/
 
     const setCentralRole = () => {
-
         return writeData('AT+CENTRAL');
-
     }
 
     const gapScan = () => {
         return writeData('AT+GAPSCAN');
-
-    }
-
-    const getRSSI = (addr) => {
-      return MAP_ADDR_TO_RSSI[addr];
     }
 
     return {
       writeData,
-      readData,
       setCentralRole,
       gapScan,
-      bindToOnRead
+      onReadableEvent
     };
   };
   
