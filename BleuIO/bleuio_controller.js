@@ -9,8 +9,25 @@ export default async function CreateScanner(bleuIO_device_path, interval) {
   // Each time a gap scan result is printed on the terminal it will update our table
   function onNewGapScan(scan) {
     MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
-    console.log(scan);
+
+    console.log('s'+scan);
+    console.log(MAP_ADDR_TO_RSSI); 
+    // Need to see if previous devices ever get updated
+    // or if this only searches for new devices.
   }
+
+  // I only think GAPSCAN ever recognizes new devices
+  // it will never re-find old ones
+
+  // So, I think we need to do an AT Target Scan
+  // to do this we make a map of the the non-distractor tags
+  // figure out what their MAC address is
+  // and only target scan these addresses.
+  // = note: you can only target scan 3 things at a time.
+  // Problem: This doesn't really let us detect distractors
+
+  // Surely there must be some way to just re-scan everything at a specific interval
+  
 
   bleuIO.onReadableEvent(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
 

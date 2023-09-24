@@ -30,7 +30,8 @@ export default function init_bleuIO(portPath) {
           if (err) {
             return console.log("Error writing data: ", err.message);
           } else {
-            return console.log(cmd + " command written");
+            //return console.log(cmd + " command written");
+            return;
           }
         });
     };
@@ -42,10 +43,9 @@ export default function init_bleuIO(portPath) {
         let enc = new TextDecoder();
         let info = new Uint8Array(data);
         info = enc.decode(info);
-        console.log(info);
+        //console.log(info);
         try {
           info = JSON.parse(info);
-          
           let scan = info;
           onReadFunction(scan);
         }
@@ -62,7 +62,7 @@ export default function init_bleuIO(portPath) {
     const gapScan = (interval) => {
       // Does each gapscan only detect devices it previously hasn't?
       // Need to figure out some way to clear that tracker.
-      
+
         return writeData('AT+GAPSCAN='+interval);
         //return writeData('AT+GAPSCAN');
     }
