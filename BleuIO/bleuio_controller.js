@@ -7,7 +7,6 @@ export default async function CreateScanner(bleuIO_device_path, interval, func) 
   // Each time a gap scan result is printed on the terminal it will update our table
   function onNewLine(scan) {
     func(scan);
-    console.log('scan'+scan);
   }
 
   bleuIO.onReadableEvent(onNewLine); // Binds a function to each new line BleuIO outputs onto serial

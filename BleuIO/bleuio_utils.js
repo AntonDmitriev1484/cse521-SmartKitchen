@@ -38,7 +38,11 @@ export default function init_bleuIO(portPath) {
           let scan = info;
           onReadFunction(scan);
         }
-        catch (err) {console.log(err)}
+        catch (err) {
+          // Sometimes errors in the try will keep anything from working
+          // COMMENTING THIS OUT FOR NOW
+          // console.log(err)
+        }
       });
     }
 
