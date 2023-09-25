@@ -1,19 +1,18 @@
 import init_bleuIO from './bleuio_utils.js'
 
-export default async function CreateScanner(bleuIO_device_path, interval) {
+export default async function CreateScanner(bleuIO_device_path, interval, func) {
 
   let MAP_ADDR_TO_RSSI = {};
 
   const bleuIO = init_bleuIO(bleuIO_device_path);
 
   // Each time a gap scan result is printed on the terminal it will update our table
-  function onNewGapScan(scan) {
-    MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
+  function onNewLine(scan) {
+    //MAP_ADDR_TO_RSSI[scan.addr] = scan.rssi;
+    func(scan);
+    // console.log('s'+scan);
+    // console.log(MAP_ADDR_TO_RSSI); 
 
-    console.log('s'+scan);
-    console.log(MAP_ADDR_TO_RSSI); 
-    // Need to see if previous devices ever get updated
-    // or if this only searches for new devices.
   }
 
   // I only think GAPSCAN ever recognizes new devices
@@ -30,7 +29,7 @@ export default async function CreateScanner(bleuIO_device_path, interval) {
   // Figure out how to ssh into the dongle
   // try issuing commands from there.
 
-  bleuIO.onReadableEvent(onNewGapScan); // Prints out everything BleuIO outputs onto our terminal
+  bleuIO.onReadableEvent(onNewLine); // Prints out everything BleuIO outputs onto our terminal
 
   //await bleuIO.openPort();
   await bleuIO.writeData('ATV1'); // Turned verbose mode on/off
