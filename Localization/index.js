@@ -14,8 +14,7 @@ DevicePaths.forEach(
 
         // Initialize the BleuIO device
         await CreateScanner(name, SCAN_INTERVAL, 
-
-            // Pass in a function to run on every gapscan
+            // Pass in a function to run on every newline spit out by the gapscan
             (update) => {
                     // Each new line spit out by the gap scan gives us an update
                     // to our map. Apply update to the map that corresponds to our device.

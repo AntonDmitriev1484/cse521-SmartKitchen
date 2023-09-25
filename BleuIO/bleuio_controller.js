@@ -1,15 +1,10 @@
 import init_bleuIO from './bleuio_utils.js'
 
-export default async function CreateScanner(bleuIO_device_path, interval, func) {
+export default async function CreateScanner(bleuIO_device_path, interval, onNewLine) {
 
   const bleuIO = init_bleuIO(bleuIO_device_path);
 
   // Each time a gap scan result is printed on the terminal it will update our table
-  function onNewLine(scan) {
-    func(scan);
-    // console.log('scan'+scan);
-  }
-
   bleuIO.onReadableEvent(onNewLine); // Binds a function to each new line BleuIO outputs onto serial
 
   await bleuIO.writeData('ATV1'); // Turned verbose mode on 
