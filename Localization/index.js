@@ -1,9 +1,11 @@
 import CreateScanner from '../BleuIO/bleuio_controller.js'
 
-const DevicePaths = ['COM4'];
+// const DevicePaths = ['COM4']; // For Windows
+
+const DevicePaths = ['/dev/tty/ACM0']
 const SCAN_INTERVAL = 2;
 
-let AddressToDistance = {};
+let AddressToDistance_ByDevice = {};
 let AddressToRssi_ByDevice = {};
 
 DevicePaths.forEach( 
@@ -37,7 +39,7 @@ DevicePaths.forEach(
     })
 
 function Trilaterate(addr, info) {   
-    // info = ( SOME_ADDR, {'COM5': -62, 'COM4': -54, 'COM3': -52} )
+    // ( SOME_ADDR, {'COM5': -62, 'COM4': -54, 'COM3': -52} )
 
     // Given this information, you should be able to:
     // Update AddressToDistance map by trilateration
@@ -48,8 +50,11 @@ function Trilaterate(addr, info) {
     // Note: The MINEW beacons also have their own names, this one is 'T3'
     // I think you can manually set names through the BeaconSET app
     if (addr == TargetName) {
-        console.log('RSSI is of T3 is: ' + info['COM4']);
+        console.log('RSSI is of T3 is: ' + info['/dev/tty/ACM0']);
     }
+
+    // A little trilateration map here, find the distance
+    // update AddressToDistance_ByDevice
 
 
 }
