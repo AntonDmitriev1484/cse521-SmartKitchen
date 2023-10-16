@@ -10,6 +10,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "jaxcore-say-node": "^0.0.9",
     "serialport": "^12.0.0"
   }
 }
