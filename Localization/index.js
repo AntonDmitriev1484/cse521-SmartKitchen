@@ -2,44 +2,111 @@ import CreateScanner from '../BleuIO/bleuio_controller.js'
 
 // const DevicePaths = ['COM4']; // For Windows
 
-const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2']
+// RSSI Constants
+const RSSI 
+
+const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2'];
 const SCAN_INTERVAL = 2;
+
+// TODO: improve later with maybe a database and not hardcoded addresses
+const Valid_TagItems = new Map([
+    ['[0]C3:00:00:0B:1A:7C', "oatmeal"],
+]);
+
+const Distractor_TagItems = Set(
+    '',
+)
 
 let AddressToDistance_ByDevice = {};
 let AddressToRssi_ByDevice = {};
 
-DevicePaths.forEach( 
-    async (name) => { 
+
+/*** TODO: ***
+ * This "ForEach" may have to be reworked into a larger scope loop for central processing
+ * of the BleuIO gapscans.
+ * Currently, each gapscan is running trilateration and item detection individually,
+ * for a total of 3 times.
+ * This should only be done once by the central RPi processing portion of the loop,
+ * so instead should look something more like:
+ * 
+ * -- INIT
+ * (1) Initialize BleuIO receivers
+ * -- LOOP
+ * (2) Each receiver gapscans
+ *   a. Update global update table of Item-->RSSI of respective receiver
+ * (3) For each item in global update table
+ *   a. Perform item detection
+ *     i.  If on table, perform trilateration
+ *     ii. Provide speaker cues
+ *
+ * So instead of creating anonymous BleuIO device objects
+ * and relying on their periodic `update()` run, reference
+ * each object and maybe implement an on-demand gapscan 
+ * and collect/update data from the gapscan that can be
+ * managed from a larger outside scope
+ */
+
+DevicePaths.forEach(
+    async (recvPort) => { // CHECK: name is the port of receiver?
 
         // Associate the device with an ADDR to RSSI map
-        AddressToRssi_ByDevice[name] = {};
+        AddressToRssi_ByDevice[recvPort] = {};
 
         // Initialize the BleuIO device
-        await CreateScanner(name, SCAN_INTERVAL, 
+        await CreateScanner(recvPort, SCAN_INTERVAL,
             // Pass in a function to run on every newline spit out by the gapscan
             (update) => {
-                    // Each new line spit out by the gap scan gives us an update
-                    // to our map. Apply update to the map that corresponds to our device.
-                    AddressToRssi_ByDevice[name][update.addr] = update.rssi
-                    
-                    // Re-run trilateration
-                    
-                    // Map containing the RSSI of the Address that just got updated
-                    // from the perspective of each device
-                    const RssiOfAddr_FromEachDevice = 
-                        Object.entries(AddressToRssi_ByDevice).reduce( (acc, [name, AddressToRssi]) => {
-                            acc[name] = AddressToRssi[update.addr]
-                            return acc;
-                        }, {});
+                // Each new line spit out by the gap scan gives us an update
+                // to our map. Apply update to the map that corresponds to our device.
+                AddressToRssi_ByDevice[recvPort][update.addr] = update.rssi
 
-                    Trilaterate(update.addr, RssiOfAddr_FromEachDevice);
+                // Map containing the RSSI of the Address that just got updated
+                // from the perspective of each device
+                const RssiOfAddr_FromEachDevice =
+                    Object.entries(AddressToRssi_ByDevice).reduce((acc, [name, AddressToRssi]) => {
+                        acc[name] = AddressToRssi[update.addr]
+                        return acc;
+                    }, {});
+                
+                /* ITEM LOCALIZATION LOGIC */
+                // Check if for item type on table
+                if (DetectItem(update.addr, RssiOfAddr_FromEachDevice, recvPort)) {
+                    // Trilaterate
+                    Trilaterate(update.addr, RssiOfAddr_FromEachDevice, recvPort);
+                }
+                else {
+                    console.log("Device " + update.addr + " is too far from receiver at " + recvPort);
+                }
+
             }
 
         )
-    })
+    });
 
-function Trilaterate(addr, info) {   
-    // ( SOME_ADDR, {'COM5': -62, 'COM4': -54, 'COM3': -52} )
+
+/*** @params  
+ *** addr: String             --> string address of BLE tag/item
+ *** info: Set(String: Int)   --> mapping of string ports and RSSI to item
+ ***
+ * Method to detect the presence of an item on the table. Works by checking for
+ * RSSI within RSSI_ON_TABLE_THRESHOLD between all three BlueIO receivers.
+ * Also provides is/is not distractor item checking.
+ ***/
+function DetectItem(addr, info, recv) {
+
+}
+
+
+/*** @params  
+ *** addr: String             --> string address of BLE tag/item
+ *** info: Set(String: Int)   --> mapping of string ports and RSSI to item
+ ***
+ * Method to perform trilateration of an item's address, given RSSi to
+ * each BleuIO receiver.
+ * Performs trilateration via solving intersection of three 2D circles.
+ ***/
+function Trilaterate(addr, info, recv) {
+    // Note: info formatted as: {'COM5': -62, 'COM4': -54, 'COM3': -52}
 
     // Given this information, you should be able to:
     // Update AddressToDistance map by trilateration
@@ -50,16 +117,13 @@ function Trilaterate(addr, info) {
 
     // TODO: hardcoded for now, may want to create some database
     // read into a map between arg addr to a specific beacon (/w associated item)
-    const TargetName = '[0]C3:00:00:0B:1A:7C'
-    
-    // TODO: process database into set
-    ValidTargetNames = Set();
-    ValidTargetNames.add(TargetName);
+
 
     // Determine if polled addr is a valid item being tracked
-    if (ValidTargetNames.has(addr)) {
-        console.log('RSSI is of T3 -> [ACMO0 is ' + info['/dev/ttyACM0']+
-        '] [ACM1 is '+ info['/dev/ttyACM1'] + '] [ACM2 is '+ info['/dev/ttyACM2']+']');
+    if (Valid_TagItems.has(addr)) {
+
+        console.log('RSSI is of T3 -> [ACMO0 is ' + info['/dev/ttyACM0'] +
+            '] [ACM1 is ' + info['/dev/ttyACM1'] + '] [ACM2 is ' + info['/dev/ttyACM2'] + ']');
 
         /* BEGIN TRILATERATION LOGIC */
         /*
