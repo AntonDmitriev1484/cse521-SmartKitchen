@@ -3,19 +3,22 @@ import CreateScanner from '../BleuIO/bleuio_controller.js'
 // const DevicePaths = ['COM4']; // For Windows
 
 // RSSI Constants
-const RSSI 
+const RSSI_PRESENT_THRESHOLD = -50;     // RSSI Strength threshold to specify as close 
+                                        // enough to beacon to be "present"
 
 const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2'];
 const SCAN_INTERVAL = 2;
 
 // TODO: improve later with maybe a database and not hardcoded addresses
-const Valid_TagItems = new Map([
+// Map containing ALL tag items
+const TagItems = new Map([
     ['[0]C3:00:00:0B:1A:7C', "oatmeal"],
 ]);
 
-const Distractor_TagItems = Set(
-    '',
-)
+// Set of valid tags (non-distractor)
+const Valid_TagItems = new Set(
+    '[0]C3:00:00:0B:1A:7C',
+);
 
 let AddressToDistance_ByDevice = {};
 let AddressToRssi_ByDevice = {};
@@ -47,7 +50,7 @@ let AddressToRssi_ByDevice = {};
  */
 
 DevicePaths.forEach(
-    async (recvPort) => { // CHECK: name is the port of receiver?
+    async (recvPort) => { // CHECK: recvPort is the port of receiver?
 
         // Associate the device with an ADDR to RSSI map
         AddressToRssi_ByDevice[recvPort] = {};
@@ -63,8 +66,8 @@ DevicePaths.forEach(
                 // Map containing the RSSI of the Address that just got updated
                 // from the perspective of each device
                 const RssiOfAddr_FromEachDevice =
-                    Object.entries(AddressToRssi_ByDevice).reduce((acc, [name, AddressToRssi]) => {
-                        acc[name] = AddressToRssi[update.addr]
+                    Object.entries(AddressToRssi_ByDevice).reduce((acc, [currPort, AddressToRssi]) => {
+                        acc[currPort] = AddressToRssi[update.addr]
                         return acc;
                     }, {});
                 
@@ -72,9 +75,16 @@ DevicePaths.forEach(
                 // Check if for item type on table
                 if (DetectItem(update.addr, RssiOfAddr_FromEachDevice, recvPort)) {
                     // Trilaterate
-                    Trilaterate(update.addr, RssiOfAddr_FromEachDevice, recvPort);
-                }
-                else {
+                    let itemLoc = Trilaterate(update.addr, RssiOfAddr_FromEachDevice, recvPort);
+
+                    // Check for distractor items
+                    if (!Valid_TagItems.has(addr)) {
+                        console.log("Distractor item of " + TagItems[update.addr] + " should be removed.");
+                    } else {
+                        console.log("Valid item of " + TagItems[update.addr] + " placed at " + itemLoc + " on table.");
+                    }
+                    
+                } else {
                     console.log("Device " + update.addr + " is too far from receiver at " + recvPort);
                 }
 
@@ -85,21 +95,27 @@ DevicePaths.forEach(
 
 
 /*** @params  
- *** addr: String             --> string address of BLE tag/item
- *** info: Set(String: Int)   --> mapping of string ports and RSSI to item
+ *** addr: String           --> string address of BLE tag/item
+ *** info: Set(String: Int) --> mapping of string ports and RSSI to item
+ *** recv: String           --> port name of BleuIO receiver
  ***
  * Method to detect the presence of an item on the table. Works by checking for
- * RSSI within RSSI_ON_TABLE_THRESHOLD between all three BlueIO receivers.
+ * RSSI within RSSI_PRESENT_THRESHOLD between all three BlueIO receivers.
  * Also provides is/is not distractor item checking.
  ***/
 function DetectItem(addr, info, recv) {
-
+    if (TagItems.has(addr)) {
+        // True if combined RSSI from each device > RSSI_PRESENT_THRESHOLD*num_devices
+        let RSSI_Sum = Object.values(info).reduce((acc, currRSSI) => {acc + currRSSI}, 0);
+        return RSSI_Sum > RSSI_PRESENT_THRESHOLD*DevicePaths.length;
+    }
 }
 
 
 /*** @params  
- *** addr: String             --> string address of BLE tag/item
- *** info: Set(String: Int)   --> mapping of string ports and RSSI to item
+ *** addr: String           --> string address of BLE tag/item
+ *** info: Set(String: Int) --> mapping of string ports and RSSI to item
+ *** recv: String           --> port name of BleuIO receiver
  ***
  * Method to perform trilateration of an item's address, given RSSi to
  * each BleuIO receiver.
@@ -120,7 +136,7 @@ function Trilaterate(addr, info, recv) {
 
 
     // Determine if polled addr is a valid item being tracked
-    if (Valid_TagItems.has(addr)) {
+    if (TagItems.has(addr)) {
 
         console.log('RSSI is of T3 -> [ACMO0 is ' + info['/dev/ttyACM0'] +
             '] [ACM1 is ' + info['/dev/ttyACM1'] + '] [ACM2 is ' + info['/dev/ttyACM2'] + ']');
@@ -167,6 +183,8 @@ function Trilaterate(addr, info, recv) {
          * 
          */
 
+        // Return coordinates (in inches)
+        return (0,0);
 
     }
 
