@@ -1,12 +1,2 @@
-const Say = require('jaxcore-say-node');
-Say.speaker = require('speaker');
-
-var voice = new Say({
-	language: 'en',
-	profile: 'Jack'
-});
-
-// say "hello world" through the speakers
-voice.say("hello world").then(function() {
-   // done
-});
+const sound = require("sound-play");
+sound.play("bowl.wav", 1).then((response) => console.log("done"));
