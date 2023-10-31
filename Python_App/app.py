@@ -1,5 +1,13 @@
-from blueio import controller
-from blueio import util as butil
+from smartkitchen import controller
+from smartkitchen import util
 
-butil.testfn()
+# List devices
+print("\n=== Finding devices connected to serial port...")
+devices =  util.DiscoverSerialDevices()
+for devc in devices:
+    print(devc)
+
+
+# Create BleuIO instance
+print("\n=== Attempting to create a BleuIO receiver instance...")
 controller.testCreateDevice()
