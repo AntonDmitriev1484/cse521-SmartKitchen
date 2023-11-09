@@ -12,7 +12,7 @@ import threading
 
 class Scanner:
 
-    def __init__(self, port, ip_to_name, trilateration_table):
+    def __init__(self, port, ip_to_name, trilateration_table, scanner_id):
        
         self.ser = serial.Serial(
             port=port,
@@ -26,9 +26,11 @@ class Scanner:
         # Lookup table of BLE beacon to name
         self.ip_to_name = ip_to_name
         self.trilateration_table = trilateration_table # Reference to trilateration table on the main thread
+        self.scanner_id = scanner_id # Index at which we will access the RSSI array in trilateration_table
         
         # Maps ADDR -> ( [LAST 10 RAW_RSSI], ROLLING_AVG)
-        self.data_table = {}
+        self.data_table = {} # Each device maintains its own datatable for debugging
+                            # All changes made to this datatable will also be applied to trilateration_table
         
         self.ROLL_AVG_SIZE = 10
 
@@ -67,6 +69,28 @@ class Scanner:
         print(f'Thread: {thread_id}')
         print(*[f"{key}: {value}" for key, value in self.data_table.items()], sep="\n")
 
+    # Updates this scaner's datatable and our threadsafe trilateration_table
+    def update_tables(self, IP_ADDR, RSSI):
+        if self.is_BLE_beacon(IP_ADDR):
+            # We have this address in our lookup table
+            if self.data_table.get(IP_ADDR, None):
+                (rssi_values, average) = self.data_table[IP_ADDR]
+
+                if len(rssi_values) >= self.ROLL_AVG_SIZE:
+                    # We have met the number of measurements in our rolling average
+                    rssi_values.pop(0) # remove oldest rssi value from front of array
+                    rssi_values.append(RSSI) # latest rssi value at end of array
+                else:
+                    # We want to add more measurements to our average
+                    rssi_values.append(RSSI)
+
+                new_average = self.average(rssi_values)
+                self.data_table[IP_ADDR] = (rssi_values, new_average)
+                self.trilateration_table.update_rssi(IP_ADDR, new_average, self.scanner_id) # Update trilateration table
+
+            else: # This address hasn't been added to our data table yet
+                self.data_table[IP_ADDR] = ([RSSI], RSSI)
+                self.trilateration_table.update_rssi(IP_ADDR, RSSI, self.scanner_id) # Update trilateration table
 
     # Read strings off of serial after 'timer' seconds
     def ser_read(self, timer):
@@ -82,27 +106,7 @@ class Scanner:
             # print(line)
             if self.is_gapscan_info(line):
                 data = json.loads(line)
-                IP_ADDR = data['addr']
-                RSSI = data['rssi']
-
-                if self.is_BLE_beacon(IP_ADDR):
-                    # We have this address in our lookup table
-                    if self.data_table.get(IP_ADDR, None):
-                        (rssi_values, average) = self.data_table[IP_ADDR]
-                        if len(rssi_values) >= self.ROLL_AVG_SIZE:
-                            # We have met the number of measurements in our rolling average
-                            rssi_values.pop(0) # remove oldest rssi value from front of array
-                            rssi_values.append(RSSI) # latest rssi value at end of array
-                            new_average = self.average(rssi_values)
-                            # Update entry for this address with new calculation
-                            self.data_table[IP_ADDR] = (rssi_values, new_average)
-                        else:
-                            # We want to add more measurements to our average
-                            rssi_values.append(RSSI)
-                            new_average = self.average(rssi_values)
-                            self.data_table[IP_ADDR] = (rssi_values, new_average)
-                    else: # This address hasn't been added to our data table yet
-                        self.data_table[IP_ADDR] = ([RSSI], RSSI)
+                self.update_tables(data['addr'],data['rssi'])
 
 
 

@@ -18,8 +18,9 @@ def main():
         "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True)
     }
 
-    trilateration_table = {}
+    trilateration_table = util.ThreadSafeTrilaterationMap()
     
+    scanner_id = 0
     for devc in devices:
         print("\n=== Creating a BleuIO receiver instance and thread for "+devc)
 
@@ -27,8 +28,11 @@ def main():
         def scanning_process():
             # Create BleuIO instance
             print("\n=== "+devc+" has started scanning on thread "+str(threading.current_thread().ident))
-            Scanner = controller.Scanner(devc, ip_to_name, trilateration_table)
+            Scanner = controller.Scanner(devc, ip_to_name, trilateration_table, scanner_id)
             Scanner.scan()
+
+        scanner_id+=1
+
         scanner_thread = threading.Thread(target=scanning_process)
         scanner_thread.start()
 
