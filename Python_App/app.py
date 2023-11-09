@@ -1,34 +1,36 @@
 from smartkitchen import controller
 from smartkitchen import util
 
+import threading
+
 # Command to see all devices:
 # 
 
 
-# List devices
-print("\n=== Finding devices connected to serial port...")
-devices =  util.DiscoverSerialDevices()
-for devc in devices:
-    print(devc)
 
+def main():
+    # List devices
+    print("\n=== Finding devices connected to serial port...")
+    devices =  util.DiscoverSerialDevices()
 
-# Create BleuIO instance
-print("\n=== Attempting to create a BleuIO receiver instance...")
+    # Maps ip -> (Name, T=valid item / F=distractor)
+    ip_to_name = {
+        "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True)
+    }
 
-# Maps ip -> (Name, T=valid item / F=distractor)
-ip_to_name = {
-    "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True)
-}
+    trilateration_table = {}
+    
+    for devc in devices:
+        print("\n=== Creating a BleuIO receiver instance and thread for "+devc)
 
-Scanner = controller.Scanner('/dev/ttyACM0', ip_to_name)
-Scanner.scan()
+        # Each scanner will asynchronously do this:
+        def scanning_process():
+            # Create BleuIO instance
+            print("\n=== "+devc+" has started scanning on thread "+str(threading.current_thread().ident))
+            Scanner = controller.Scanner(devc, ip_to_name, trilateration_table)
+            Scanner.scan()
+        scanner_thread = threading.Thread(target=scanning_process)
+        scanner_thread.start()
 
-# controller.gapscanReceiver(bleuIO)
-
-# # bleuIO.at_central()
-
-# # def scan_cb(scan_input):
-# #     print(scan_input)
-
-# # bleuIO.register_scan_cb(scan_cb)
+main()
 

@@ -4,6 +4,7 @@ import time
 import serial
 import json
 import re
+import threading
 
 ''' PyPip Docs: https://pypi.org/project/bleuio/#description
     Check README and requirements.txt for necessary dependencies
@@ -11,7 +12,7 @@ import re
 
 class Scanner:
 
-    def __init__(self, port, ip_to_name):
+    def __init__(self, port, ip_to_name, trilateration_table):
        
         self.ser = serial.Serial(
             port=port,
@@ -24,6 +25,7 @@ class Scanner:
 
         # Lookup table of BLE beacon to name
         self.ip_to_name = ip_to_name
+        self.trilateration_table = trilateration_table # Reference to trilateration table on the main thread
         
         # Maps ADDR -> ( [LAST 10 RAW_RSSI], ROLLING_AVG)
         self.data_table = {}
@@ -60,12 +62,18 @@ class Scanner:
     def is_BLE_beacon(self, ip):
         return self.ip_to_name.get(ip, False)
 
+    def print_data_table(self):
+        thread_id = str(threading.current_thread().ident)
+        print(f'Thread: {thread_id}')
+        print(*[f"{key}: {value}" for key, value in self.data_table.items()], sep="\n")
+
+
     # Read strings off of serial after 'timer' seconds
     def ser_read(self, timer):
         time.sleep(timer) # wait 'timer' seconds
 
         # Map pretty print
-        print(*[f"{key}: {value}" for key, value in self.data_table.items()], sep="\n")
+        self.print_data_table()
 
         lines = self.ser.readlines()
         for line in lines:
