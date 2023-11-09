@@ -14,8 +14,14 @@ for devc in devices:
 
 # Create BleuIO instance
 print("\n=== Attempting to create a BleuIO receiver instance...")
-Scanner = controller.Scanner('/dev/ttyACM0')
-# Scanner.scan()
+
+# Maps ip -> (Name, T=valid item / F=distractor)
+ip_to_name = {
+    "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True)
+}
+
+Scanner = controller.Scanner('/dev/ttyACM0', ip_to_name)
+Scanner.scan()
 
 # controller.gapscanReceiver(bleuIO)
 
