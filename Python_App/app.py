@@ -11,6 +11,9 @@ IP_TO_NAME = {
     "[0]C3:00:00:0B:1A:7A": ("Communist Manifesto", True)
 }
 
+THRESH = -70
+DEBUG = True
+DEBUG_TAB = False
 
 def main():
     # List devices
@@ -44,13 +47,8 @@ def main():
 
     while True:
         time.sleep(1)
-        print("Main")
+        # print("Main")
         
-        # !!! LOGIC HERE !!!
-
-        THRESH = -70
-        DEBUG = True
-        DEBUG_TAB = False
 
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
 
@@ -71,5 +69,7 @@ def main():
         
         trilateration_table.print() if DEBUG_TAB else None
 
-main()
+
+if __name__ == '__main__':
+    main()
 
