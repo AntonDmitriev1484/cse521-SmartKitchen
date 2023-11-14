@@ -26,10 +26,6 @@ def requires(inputArray):
         engine.runAndWait()
     engine.stop()
 
-# inputTest = ['Spoon', 'Oatmeal', 'Pot', 'Water']
-
-# requires(inputTest)
-
 def distractorPresent():
     engine = pyttsx3.init()  # object creation
     """ RATE"""
@@ -77,8 +73,6 @@ def correctItemAdded(ItemName):
     engine.runAndWait()
     engine.stop()
 
-# correctItemAdded("Brendan Yang")
-
-# requiredItems = ['Oatmeal', 'Salt', '1 Measure Cup', '½ Measure Cup', '¼ Measure Spoon', 'Pan', 'Stirring Spoon', 'Timer', 'Bowl', 'Metal Spoon', 'Cork Hot Pad']
-
-# requires(requiredItems)
+if __name__ == '__main__':
+    distractorPresent()
+    pass
