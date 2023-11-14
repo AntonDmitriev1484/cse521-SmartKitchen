@@ -65,10 +65,9 @@ def correctItemAdded(ItemName):
     """VOICE"""
     voices = engine.getProperty('voices')  # getting details of current voice
     engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-    outputText = "The "
-    outputText = outputText + ItemName
-    outputText = outputText + " has been detected on the table."
-    engine.say(outputText)
+    engine.say(ItemName)
+    engine.runAndWait()
+    engine.say("has been detected on the table.")
     engine.runAndWait()
     engine.stop()
 
@@ -96,3 +95,5 @@ def ItemRemoved(ItemName):
 if __name__ == '__main__':
     distractorPresent()
     pass
+
+correctItemAdded("Brendan")
