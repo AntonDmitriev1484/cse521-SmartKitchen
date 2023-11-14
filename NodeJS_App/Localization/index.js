@@ -85,6 +85,9 @@ DevicePaths.forEach(
                     }
                     
                 } else {
+                    if (TagItems.get(update.addr) === "oatmeal") {
+                        console.log("Found oaty")
+                    }
                     console.log("Device " + update.addr + " is too far from receiver at " + recvPort);
                 }
 
