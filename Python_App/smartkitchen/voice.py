@@ -26,10 +26,6 @@ def requires(inputArray):
         engine.runAndWait()
     engine.stop()
 
-inputTest = ['Spoon', 'Oatmeal', 'Pot', 'Water']
-
-# requires(inputTest)
-
 def distractorPresent():
     engine = pyttsx3.init()  # object creation
     """ RATE"""
@@ -97,3 +93,6 @@ def ItemRemoved(ItemName):
     engine.say(outputText)
     engine.runAndWait()
     engine.stop()
+if __name__ == '__main__':
+    distractorPresent()
+    pass
