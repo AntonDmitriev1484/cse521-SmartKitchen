@@ -22,6 +22,7 @@ IP_TO_NAME = {
 }
 
 itemsOnTable = {}
+requiredItems = {'Oatmeal', 'Salt', '1 Measure Cup', '½ Measure Cup', '¼ Measure Spoon', 'Pan', 'Stirring Spoon', 'Timer', 'Bowl', 'Metal Spoon', 'Cork Hot Pad'}
 
 THRESH = -70
 DEBUG = True
@@ -61,8 +62,10 @@ def main():
         time.sleep(1)
         # print("Main")
 
+        #current items on table
+        currentTableImage = {}
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-
+            currentTableImage.add(beacon_info.name)
             sum = 0
             n = 0
             for rssi in beacon_info.rssi_array:
@@ -77,6 +80,18 @@ def main():
                 print(f"{beacon_info.name}: {avg} is on table") if DEBUG else None
             else:
                 print(f"{beacon_info.name}: {avg} is not on table") if DEBUG else None
+        missingItems = {}
+        distractors = {}
+        for itemName in currentTableImage:
+            #Item has been added
+            if not itemName in itemsOnTable:
+                if itemsOnTable.get(itemName, None):
+                    correctItemAdded(itemName)
+            if not itemName in requiredItems:
+                distractors.add(itemName)
+        missingItems = requiredItems - currentTableImage
+
+
 
         trilateration_table.print() if DEBUG_TAB else None
 
