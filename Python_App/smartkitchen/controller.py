@@ -32,7 +32,7 @@ class Scanner:
         self.data_table = {} # Each device maintains its own datatable for debugging
                             # All changes made to this datatable will also be applied to trilateration_table
         
-        self.ROLL_AVG_SIZE = 10
+        self.ROLL_AVG_SIZE = 4
 
         self.ser_write('ATI')
         self.ser_write('AT+CENTRAL')
