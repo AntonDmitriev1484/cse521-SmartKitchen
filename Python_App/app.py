@@ -1,6 +1,6 @@
 from smartkitchen import controller
 from smartkitchen import util
-# import voice
+from smartkitchen import voice
 
 import threading
 import time
@@ -9,8 +9,21 @@ import time
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
     "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True),
-    "[0]C3:00:00:0B:1A:7A": ("Communist Manifesto", True)
+    "[0]C3:00:00:0B:1A:7A": ("Communist Manifesto", True),
+    "Placeholder" : ("Salt", True),
+    "Placeholder" : ("1 Measure Cup", True),
+    "Placeholder" : ("½ Measure Cup", True),
+    "Placeholder" : ("¼ Measure Spoon", True),
+    "Placeholder" : ("Pan", True),
+    "Placeholder" : ("Stirring Spoon", True),
+    "Placeholder" : ("Timer", True),
+    "Placeholder" : ("Bowl", True),
+    "Placeholder" : ("Metal Spoon", True),
+    "Placeholder" : ("Cork Hot Pad", True),
 }
+
+itemsOnTable = {}
+requiredItems = {'Oatmeal', 'Salt', '1 Measure Cup', '½ Measure Cup', '¼ Measure Spoon', 'Pan', 'Stirring Spoon', 'Timer', 'Bowl', 'Metal Spoon', 'Cork Hot Pad'}
 
 THRESH = -70
 DEBUG = True
@@ -22,7 +35,7 @@ def millis():
 
 def main():
     # Delta timing variables in millis
-    PERIODIC_VOICE_DELTA_TIME = 10000  
+    PERIODIC_VOICE_DELTA_TIME = 5000  
     PERIODIC_VOICE_TIMER = millis()
 
     # List devices
@@ -30,7 +43,7 @@ def main():
     devices =  util.DiscoverSerialDevices()
 
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
-    
+
     scanner_id = 0
 
     print(devices)
@@ -55,9 +68,7 @@ def main():
         scanner_id+=1
 
     while True:
-        time.sleep(1)
-        # print("Main")
-        
+        time.sleep(1)        
         # For every item in table
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
 
@@ -88,7 +99,7 @@ def main():
                 print(currentTime/1000)
 
                 # Voice remove distractors
-                print("VOICING DISTRACTOR ITEMS")
+                
                 # distractorItemsSet
 
                 # Voice required items
@@ -117,4 +128,90 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+import pyttsx3
+import time
+
+
+
+def requires(inputArray):
+    engine = pyttsx3.init()  # object creation
+    """ RATE"""
+    rate = engine.getProperty('rate')  # getting details of current speaking rate
+    print(rate)  # printing current voice rate
+    engine.setProperty('rate', 100)  # setting up new voice rate
+
+    requireString = "The following items are required."
+
+    """VOLUME"""
+    volume = engine.getProperty('volume')  # getting to know current volume level (min=0 and max=1)
+    print(volume)  # printing current volume level
+    engine.setProperty('volume', 2.0)  # setting up volume level  between 0 and 1
+
+    """VOICE"""
+    voices = engine.getProperty('voices')  # getting details of current voice
+    # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
+
+    engine.say("Put the following items on the table.")
+    engine.runAndWait()
+    for item in inputArray:
+        engine.say(item)
+        engine.runAndWait()
+    engine.stop()
+
+inputTest = ['Spoon', 'Oatmeal', 'Pot', 'Water']
+
+# requires(inputTest)
+
+def distractorPresent():
+    engine = pyttsx3.init()  # object creation
+    """ RATE"""
+    rate = engine.getProperty('rate')  # getting details of current speaking rate
+    print(rate)  # printing current voice rate
+    engine.setProperty('rate', 100)  # setting up new voice rate
+
+    requireString = "The following items are required."
+
+    """VOLUME"""
+    volume = engine.getProperty('volume')  # getting to know current volume level (min=0 and max=1)
+    print(volume)  # printing current volume level
+    engine.setProperty('volume', 2.0)  # setting up volume level  between 0 and 1
+
+    """VOICE"""
+    voices = engine.getProperty('voices')  # getting details of current voice
+    # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
+
+    engine.say("There is a distractor on the table. Please remove it.")
+    engine.runAndWait()
+    engine.stop()
+
+def correctItemAdded(ItemName):
+    engine = pyttsx3.init()  # object creation
+    """ RATE"""
+    rate = engine.getProperty('rate')  # getting details of current speaking rate
+    print(rate)  # printing current voice rate
+    engine.setProperty('rate', 100)  # setting up new voice rate
+
+    requireString = "The following items are required."
+
+    """VOLUME"""
+    volume = engine.getProperty('volume')  # getting to know current volume level (min=0 and max=1)
+    print(volume)  # printing current volume level
+    engine.setProperty('volume', 2.0)  # setting up volume level  between 0 and 1
+
+    """VOICE"""
+    voices = engine.getProperty('voices')  # getting details of current voice
+    engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
+    outputText = "The "
+    outputText = outputText + ItemName
+    outputText = outputText + " has been detected on the table. Good job! Smiling Emoji"
+    engine.say(outputText)
+    engine.runAndWait()
+    engine.stop()
+
+correctItemAdded("Brendan Yang")
+
+
+# requires(requiredItems)
 

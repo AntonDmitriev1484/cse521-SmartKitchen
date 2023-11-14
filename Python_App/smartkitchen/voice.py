@@ -26,7 +26,7 @@ def requires(inputArray):
         engine.runAndWait()
     engine.stop()
 
-inputTest = ['Spoon', 'Oatmeal', 'Pot', 'Water']
+# inputTest = ['Spoon', 'Oatmeal', 'Pot', 'Water']
 
 # requires(inputTest)
 
@@ -77,8 +77,8 @@ def correctItemAdded(ItemName):
     engine.runAndWait()
     engine.stop()
 
-correctItemAdded("Brendan Yang")
+# correctItemAdded("Brendan Yang")
 
-requiredItems = ['Oatmeal', 'Salt', '1 Measure Cup', '½ Measure Cup', '¼ Measure Spoon', 'Pan', 'Stirring Spoon', 'Timer', 'Bowl', 'Metal Spoon', 'Cork Hot Pad']
+# requiredItems = ['Oatmeal', 'Salt', '1 Measure Cup', '½ Measure Cup', '¼ Measure Spoon', 'Pan', 'Stirring Spoon', 'Timer', 'Bowl', 'Metal Spoon', 'Cork Hot Pad']
 
-requires(requiredItems)
+# requires(requiredItems)
