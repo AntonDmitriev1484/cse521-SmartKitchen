@@ -1,5 +1,6 @@
 from smartkitchen import controller
 from smartkitchen import util
+# import voice
 
 import threading
 import time
@@ -15,7 +16,15 @@ THRESH = -70
 DEBUG = True
 DEBUG_TAB = False
 
+
+def millis():
+    return time.time() * 1000
+
 def main():
+    # Delta timing variables in millis
+    PERIODIC_VOICE_DELTA_TIME = 10000  
+    PERIODIC_VOICE_TIMER = millis()
+
     # List devices
     print("\n=== Finding devices connected to serial port...")
     devices =  util.DiscoverSerialDevices()
@@ -49,9 +58,10 @@ def main():
         time.sleep(1)
         # print("Main")
         
-
+        # For every item in table
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
 
+            # Update RSSI values between item and all receivers
             sum = 0
             n = 0
             for rssi in beacon_info.rssi_array:
@@ -60,14 +70,49 @@ def main():
                     n += 1
             avg = sum / n
 
-            # print(f"{beacon_info.name}: {avg}")
-
+            # Determine if item is on table or not
+            isItemOnTable = False
             if avg > THRESH:
+                isItemOnTable = True
                 print(f"{beacon_info.name}: {avg} is on table") if DEBUG else None
             else:
                 print(f"{beacon_info.name}: {avg} is not on table") if DEBUG else None
+
+            
+            ### VOICE SEQUENCES
+
+            # Periodic voice cues
+            currentTime = millis()
+            if (currentTime > PERIODIC_VOICE_TIMER):
+                PERIODIC_VOICE_TIMER += PERIODIC_VOICE_DELTA_TIME
+                print(currentTime/1000)
+
+                # Voice remove distractors
+                print("VOICING DISTRACTOR ITEMS")
+                # distractorItemsSet
+
+                # Voice required items
+                print("VOICING REQUIRED ITEMS")
+                # requiredItemsSet \ itemsOnTable
+        
+
+            # Immediate voice cues
+            if (isItemOnTable):
+                if (not itemsOnTable.contains(beacon_addr)):
+                    # First added item
+                    itemsOnTable.add(beacon_addr)
+                    print("VOICING ADDED ITEM")
+
+                else:
+                    # First removed item
+                    itemsOnTable.remove(beacon_addr)
+                    print("VOICING REMOVED ITEM")
+               
+            
         
         trilateration_table.print() if DEBUG_TAB else None
+
+
 
 
 if __name__ == '__main__':
