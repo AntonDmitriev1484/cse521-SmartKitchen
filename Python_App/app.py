@@ -27,7 +27,7 @@ def main():
         def scanning_process(scanner_id):
             # Create BleuIO instance
             print("\n=== "+devc+" has started scanning on thread "
-            +str(threading.current_thread().ident) + " scanner id is "+str(scanner_id))
+            +str(threading.current_thread().name) + " scanner id is "+str(scanner_id))
 
             Scanner = controller.Scanner(devc, IP_TO_NAME, trilateration_table, scanner_id)
             Scanner.scan()
@@ -39,9 +39,10 @@ def main():
     while True:
         time.sleep(1)
         print("Main")
+        
         # !!! INSERTION TRILATERATION LOGIC HERE OR IN BEACONINFO !!!
         
-        # trilateration_table.print()
+        trilateration_table.print()
 
 main()
 

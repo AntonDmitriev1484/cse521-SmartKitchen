@@ -97,7 +97,7 @@ class Scanner:
         time.sleep(timer) # wait 'timer' seconds
 
         # Map pretty print
-        self.print_data_table()
+        # self.print_data_table()
 
         lines = self.ser.readlines()
         for line in lines:
