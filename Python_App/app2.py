@@ -53,12 +53,42 @@ def main():
         @app.route('/', methods=['POST'])
         def receive_json():
             try:
-                json_data = request.get_json()
-                print("Received JSON:", json_data)
+                scan = request.get_json()
+                print(scan)
+                # Still need to maintain its own rolling avg
+                # trilateration_table.update_rssi(scan)
+                
                 return jsonify({"status": "success"})
             except Exception as e:
                 return jsonify({"status": "error", "message": str(e)})
         app.run(host='172.27.84.110',port=3000)
+
+            # Updates this scaner's datatable and our threadsafe trilateration_table
+    # def update_tables(self, IP_ADDR, RSSI):
+    #     if self.is_BLE_beacon(IP_ADDR):
+    #         # We have this address in our lookup table
+    #         if self.data_table.get(IP_ADDR, None):
+    #             (rssi_values, average) = self.data_table[IP_ADDR]
+
+    #             if len(rssi_values) >= self.ROLL_AVG_SIZE:
+    #                 # We have met the number of measurements in our rolling average
+    #                 rssi_values.pop(0) # remove oldest rssi value from front of array
+    #                 rssi_values.append(RSSI) # latest rssi value at end of array
+    #             else:
+    #                 # We want to add more measurements to our average
+    #                 rssi_values.append(RSSI)
+
+    #             new_average = self.average(rssi_values)
+    #             self.data_table[IP_ADDR] = (rssi_values, new_average)
+    #             self.trilateration_table.update_rssi(IP_ADDR, new_average, self.scanner_id) # Update trilateration table
+
+    #         else: # This address hasn't been added to our data table yet
+    #             self.data_table[IP_ADDR] = ([RSSI], RSSI)
+    #             self.trilateration_table.update_rssi(IP_ADDR, RSSI, self.scanner_id) # Update trilateration table
+
+
+
+
 
     scanner_thread = threading.Thread(target=scan_subscriber)
     scanner_thread.start()
