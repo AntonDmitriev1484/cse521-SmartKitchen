@@ -7,8 +7,6 @@ import pyttsx3
 import threading
 import time
 
-
-
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
     "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True),
@@ -76,6 +74,8 @@ def main():
     while True:
         time.sleep(1)        
         # For every item in table
+
+        trilateration_table.print()
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
 
             # Update RSSI values between item and all receivers
@@ -100,6 +100,7 @@ def main():
 
             # Periodic voice cues
             currentTime = millis()
+            addr = beacon_addr
             if (currentTime > PERIODIC_VOICE_TIMER):
                 PERIODIC_VOICE_TIMER += PERIODIC_VOICE_DELTA_TIME
                 print(currentTime/1000)
@@ -116,11 +117,10 @@ def main():
                 for addr in itemsOnTable:
                     itemsOnTable_spk.append(IP_TO_NAME.get(addr)[0])
                 voice.requires(requiredItemsSet.difference(itemsOnTable))
-        
 
             # Immediate voice cues
             if (isItemOnTable):
-                if (not itemsOnTable.contains(beacon_addr)):
+                if (not beacon_addr in itemsOnTable):
                     # First added item
                     itemsOnTable.add(beacon_addr)
                     print("VOICING ADDED ITEM")
