@@ -1,12 +1,13 @@
 from smartkitchen import controller
 from smartkitchen import util
 from smartkitchen import voice
-from flask import Flask, request, jsonify
 
 import pyttsx3
 
 import threading
 import time
+
+from server import scan_subscriber
 
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
@@ -31,8 +32,8 @@ requiredItemsSet = {
 }
 
 THRESH = -70
-DEBUG = True
-DEBUG_TAB = False
+DEBUG = False
+DEBUG_TAB = True
 
 
 def millis():
@@ -47,51 +48,14 @@ def main():
 
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
 
-    # Defines the Flask server that receives fetch requests from the scanner
-    def scan_subscriber():
-        app = Flask('ScanSubscriber')
-        @app.route('/', methods=['POST'])
-        def receive_json():
-            try:
-                scan = request.get_json()
-                print(scan)
-                # Still need to maintain its own rolling avg
-                # trilateration_table.update_rssi(scan)
-                
-                return jsonify({"status": "success"})
-            except Exception as e:
-                return jsonify({"status": "error", "message": str(e)})
-        app.run(host='172.27.84.110',port=3000)
-
-            # Updates this scaner's datatable and our threadsafe trilateration_table
-    # def update_tables(self, IP_ADDR, RSSI):
-    #     if self.is_BLE_beacon(IP_ADDR):
-    #         # We have this address in our lookup table
-    #         if self.data_table.get(IP_ADDR, None):
-    #             (rssi_values, average) = self.data_table[IP_ADDR]
-
-    #             if len(rssi_values) >= self.ROLL_AVG_SIZE:
-    #                 # We have met the number of measurements in our rolling average
-    #                 rssi_values.pop(0) # remove oldest rssi value from front of array
-    #                 rssi_values.append(RSSI) # latest rssi value at end of array
-    #             else:
-    #                 # We want to add more measurements to our average
-    #                 rssi_values.append(RSSI)
-
-    #             new_average = self.average(rssi_values)
-    #             self.data_table[IP_ADDR] = (rssi_values, new_average)
-    #             self.trilateration_table.update_rssi(IP_ADDR, new_average, self.scanner_id) # Update trilateration table
-
-    #         else: # This address hasn't been added to our data table yet
-    #             self.data_table[IP_ADDR] = ([RSSI], RSSI)
-    #             self.trilateration_table.update_rssi(IP_ADDR, RSSI, self.scanner_id) # Update trilateration table
-
-
-
-
-
-    scanner_thread = threading.Thread(target=scan_subscriber)
+    scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
+
+    print("Made it past scanner")
+    while True:
+        time.sleep(1)
+        print("in")
+        trilateration_table.print() # Ok this isn't printing anything
 
     while True:
         time.sleep(1)        
@@ -160,7 +124,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # print("Testing voice")
-    # voice.distractorPresent()
-
     main()
