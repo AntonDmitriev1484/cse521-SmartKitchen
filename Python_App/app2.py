@@ -1,6 +1,7 @@
 from smartkitchen import controller
 from smartkitchen import util
 from smartkitchen import voice
+from flask import Flask, request, jsonify
 
 import pyttsx3
 
@@ -43,33 +44,24 @@ def main():
     PERIODIC_VOICE_TIMER = millis()
 
     # List devices
-    print("\n=== Finding devices connected to serial port...")
-    devices =  util.DiscoverSerialDevices()
 
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
 
-    scanner_id = 0
+    # Defines the Flask server that receives fetch requests from the scanner
+    def scan_subscriber():
+        app = Flask('ScanSubscriber')
+        @app.route('/', methods=['POST'])
+        def receive_json():
+            try:
+                json_data = request.get_json()
+                print("Received JSON:", json_data)
+                return jsonify({"status": "success"})
+            except Exception as e:
+                return jsonify({"status": "error", "message": str(e)})
+        app.run(host='172.27.84.110',port=3000)
 
-    print(devices)
-
-    Scanners = []
-
-    for devc in devices:
-        print("\n=== Creating a BleuIO receiver instance and thread for "+devc)
-
-        # Scanners.append(controller.Scanner(devc, IP_TO_NAME, trilateration_table, scanner_id))
-        # Each scanner will asynchronously do this:
-        def scanning_process(scanner_id):
-            # Create BleuIO instance
-            print("\n=== "+devc+" has started scanning on thread "
-            +str(threading.current_thread().name) + " scanner id is "+str(scanner_id))
-
-            Scanner = controller.Scanner(devc, IP_TO_NAME, trilateration_table, scanner_id)
-            Scanner.scan()
-
-        scanner_thread = threading.Thread(target=scanning_process, args=(scanner_id,))
-        scanner_thread.start()
-        scanner_id+=1
+    scanner_thread = threading.Thread(target=scan_subscriber)
+    scanner_thread.start()
 
     while True:
         time.sleep(1)        
