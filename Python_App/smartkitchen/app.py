@@ -1,6 +1,6 @@
-from smartkitchen import controller
-from smartkitchen import util
-from smartkitchen import voice
+import controller
+import util
+import voice
 
 import pyttsx3
 
