@@ -54,8 +54,8 @@ def main():
     print("Made it past scanner")
     while True:
         time.sleep(1)
-        print("in")
-        trilateration_table.print() # Ok this isn't printing anything
+        trilateration_table.print()
+        print("\n")
 
     while True:
         time.sleep(1)        

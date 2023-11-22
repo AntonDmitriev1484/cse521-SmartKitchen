@@ -37,7 +37,9 @@ class BeaconInfo:
     # Struct / class to deal with beacon information
 
     def __init__(self, name, is_not_distractor):
-        self.rssi_raw_data = [[None], [None], [None]]
+        self.rssi_raw_data = [[], [], []] 
+        # device_id is an index to its past 3 rssi measurements for this beacon
+
         self.rssi_array = [None, None, None]
         self.is_distractor = not is_not_distractor
         self.name = name
@@ -57,13 +59,10 @@ class BeaconInfo:
             else:
                 # We want to add more measurements to our average
                 rssi_values.append(data_point)
+                
             new_average = average(rssi_values) # Error here -> adding 'int' to NoneType
             self.rssi_raw_data[device_id] = rssi_values
-            self.rssi_array[device_id] = new_average
-            # {
-            # message: "unsupported operand type(s) for +=: 'int' and 'NoneType'",
-            # status: 'error'
-            # }
+            self.rssi_array[device_id] = round(new_average,2)
 
         else: # This address hasn't been added to our data table yet
             self.rssi_raw_data[device_id] = [data_point]
