@@ -26,14 +26,12 @@ def requires(inputArray):
         engine.runAndWait()
     engine.stop()
 
-def distractorPresent():
+def distractorPresent(ItemName, ItemLoc):
     engine = pyttsx3.init()  # object creation
     """ RATE"""
     rate = engine.getProperty('rate')  # getting details of current speaking rate
     print(rate)  # printing current voice rate
     engine.setProperty('rate', 100)  # setting up new voice rate
-
-    requireString = "The following items are required."
 
     """VOLUME"""
     volume = engine.getProperty('volume')  # getting to know current volume level (min=0 and max=1)
@@ -43,8 +41,9 @@ def distractorPresent():
     """VOICE"""
     voices = engine.getProperty('voices')  # getting details of current voice
     # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-
-    engine.say("There is a distractor on the table. Please remove it.")
+    outputString = "Distractor present, remove the " + ItemName + " from the " + ItemLoc + " of the table."
+    print(outputString)
+    engine.say(outputString)
     engine.runAndWait()
     engine.stop()
 
@@ -92,8 +91,3 @@ def ItemRemoved(ItemName):
     engine.say(outputText)
     engine.runAndWait()
     engine.stop()
-if __name__ == '__main__':
-    distractorPresent()
-    pass
-
-correctItemAdded("Brendan")
