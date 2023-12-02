@@ -24,11 +24,6 @@ IP_TO_NAME = {
   "[0]C3:00:00:0B:1A:79" : ("Cork Hot Pad", True),
 }
 
-itemsOnTable = set()
-requiredItemsSet = {
-    "[0]C3:00:00:0B:1A:7C",
-    "[0]C3:00:00:0B:1A:7A"
-}
 
 THRESH = -70
 DEBUG = False
@@ -43,7 +38,9 @@ def main():
     PERIODIC_VOICE_DELTA_TIME = 5000  
     PERIODIC_VOICE_TIMER = millis()
 
+    # Maps ip -> BeaconInfo
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
+    
 
     scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
