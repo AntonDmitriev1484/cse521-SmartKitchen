@@ -56,6 +56,8 @@ LocationEstimateToString = {
     LocationEstimate.OFF: "off of the table",
 }
 
+
+
 class BeaconInfo:
     # Struct / class to deal with beacon information
 
@@ -69,6 +71,8 @@ class BeaconInfo:
         self.name = name
 
         self.required_item = is_not_distractor
+        
+        self.coord = (0,0)
         self.loc_estimate = LocationEstimate.OFF
 
     def add_data(self, device_id, data_point):

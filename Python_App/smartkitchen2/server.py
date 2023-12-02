@@ -16,6 +16,9 @@ def scan_subscriber(trilateration_table):
         try:
             scan = request.get_json()
             trilateration_table.update_rssi(scan['addr'], scan['rssi'], ser_device_to_int[scan['device']])
+
+            
+
             return jsonify({"status": "success"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
