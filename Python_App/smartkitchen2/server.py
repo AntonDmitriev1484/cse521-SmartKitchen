@@ -21,5 +21,5 @@ def scan_subscriber(trilateration_table):
             return jsonify({"status": "error", "message": str(e)})
     app.logger.disabled = True
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
-    app.run(host='172.27.48.181',port=3000)
+    app.run(host='0.0.0.0',port=3000)
     
