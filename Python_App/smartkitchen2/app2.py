@@ -33,11 +33,23 @@ DEBUG_TAB = True
 def millis():
     return time.time() * 1000
 
+""" HELPER FUNCTIONS """
+
+# Calibration function that returns average RSSI to a beaconAddr over n iters
+def calibrateThresholds(iters, beaconAddr):
+	
+	rssiBuffer = [[],[],[]] # a [3 x iters] matrix
+	for _ in range(0, iters):
+		RSSI_TUPLE = SCAN()	# placeholder that obtains 1x3 arr of RSSI values to beaconAddr
+		for reciever in range(0,len(RSSI_TUPLE)):
+			rssiBuffer[reciever].append(RSSI_TUPLE[reciever])
+
+	# Compute average RSSI per receiver
+	return tuple(map((lambda x: sum(x)/len(x)), rssiBuffer))
+
 def callibrate(width, height):
-
-
     for i in range(0,5):
-
+        pass
         # Send fetch to pi. Pi will scan and serial read once
 
         # Add 
