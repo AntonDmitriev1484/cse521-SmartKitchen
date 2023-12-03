@@ -98,7 +98,6 @@ class BeaconInfo:
             self.rssi_raw_data[device_id] = [data_point]
             self.rssi_array[device_id] = data_point # Update trilateration table
 
-
         return
 
     def __repr__(self):
@@ -110,15 +109,20 @@ class BeaconInfo:
 
 class ThreadSafeTrilaterationMap:
 
-    def __init__(self, ip_to_name, scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound):
+    def __init__(self, ip_to_name):
         self.inner_map = {}
         self.lock = threading.Lock()
         self.ip_to_name = ip_to_name
+        self.bounds_initialized = False
 
+
+    def init_bounds(self, scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound):
         self.scan0_bound = scan0_bound
         self.scan1_inner_bound = scan1_inner_bound
         self.scan1_outer_bound = scan1_outer_bound
         self.scan2_bound = scan2_bound
+        self.bounds_initialized = True
+
 
     def put(self, key, value):
         with self.lock:
@@ -138,6 +142,11 @@ class ThreadSafeTrilaterationMap:
 
     # Return a LocationEstimate enum based on 4 rssi bounds
     def get_location(self, beacon_info):
+
+        # While we callibrate, don't do any bounds estimates
+        if not self.bounds_initialized:
+            return LocationEstimate.OFF
+        
         rssi = beacon_info.rssi_array
 
         in_inner_ring = self.scan1_inner_bound > rssi[1] > self.scan1_outer_bound

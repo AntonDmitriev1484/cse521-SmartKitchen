@@ -1,12 +1,14 @@
 import controller
 import util
 import voice
-from server import scan_subscriber
+from server import scan_subscriber, bounds_calibration
 
 import pyttsx3
 
 import threading
 import time
+import requests
+
 
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
@@ -47,6 +49,26 @@ def calibrateThresholds(iters, beaconAddr):
 	# Compute average RSSI per receiver
 	return tuple(map((lambda x: sum(x)/len(x)), rssiBuffer))
 
+
+
+def calibrate_bounds_by_beacon(trilateration_table):
+    # use the distractor to callibrate bounds
+    # Basically just look at its average rssi values from each scanner, and return those in an array
+
+    time.sleep(6) # Wait to get an average going
+    # Get the distractor BeaconInfo
+    info = trilateration_table.get("[0]C3:00:00:0B:1A:7A")
+    [scan0_bound, scan1_inner_bound, scan2_bound] = info.rssi_array
+    # Caution! This will be very incorrect if the bounds 
+    # aren't mapped to the correct physical sensors
+
+    scan1_outer_bound = (scan2_bound + scan0_bound) / 2
+
+    trilateration_table.init_bounds(scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
+
+
+        
+
 def main():
     # Delta timing variables in millis
     PERIODIC_VOICE_DELTA_TIME = 5000  
@@ -58,12 +80,14 @@ def main():
     scan2_bound = -70
 
     # Maps ip -> BeaconInfo while also performing trilateration logic
-    trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME, 
-            scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
+    trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
 
 
     scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
+
+    # Blocks for 6 seconds to callibrate the table's RSSI bounds
+    calibrate_bounds_by_beacon(trilateration_table)
 
     while True:
         time.sleep(1)

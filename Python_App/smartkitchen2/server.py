@@ -25,5 +25,3 @@ def scan_subscriber(trilateration_table):
     app.logger.disabled = True
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     app.run(host='0.0.0.0',port=3000)
-
-    
