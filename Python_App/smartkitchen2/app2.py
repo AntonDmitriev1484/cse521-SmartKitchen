@@ -33,10 +33,20 @@ DEBUG_TAB = True
 def millis():
     return time.time() * 1000
 
+def callibrate(width, height):
+
+
+    for i in range(0,5):
+
+        # Send fetch to pi. Pi will scan and serial read once
+
+        # Add 
+
 def main():
     # Delta timing variables in millis
     PERIODIC_VOICE_DELTA_TIME = 5000  
     PERIODIC_VOICE_TIMER = millis()
+
 
     # Maps ip -> BeaconInfo
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
