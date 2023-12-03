@@ -47,22 +47,20 @@ def calibrateThresholds(iters, beaconAddr):
 	# Compute average RSSI per receiver
 	return tuple(map((lambda x: sum(x)/len(x)), rssiBuffer))
 
-def callibrate(width, height):
-    for i in range(0,5):
-        pass
-        # Send fetch to pi. Pi will scan and serial read once
-
-        # Add 
-
 def main():
     # Delta timing variables in millis
     PERIODIC_VOICE_DELTA_TIME = 5000  
     PERIODIC_VOICE_TIMER = millis()
 
+    scan0_bound = -40
+    scan1_inner_bound = -50
+    scan1_outer_bound = -60
+    scan2_bound = -70
 
-    # Maps ip -> BeaconInfo
-    trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
-    
+    # Maps ip -> BeaconInfo while also performing trilateration logic
+    trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME, 
+            scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
+
 
     scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
@@ -86,75 +84,6 @@ def main():
             # for itemName in requiredItems:
             #     outputString = outputString + ", " + itemName
             voice.requires(requiredItems)
-
-
-
-
-    # --- CODE FOR TTS DEMO COMMENTED OUT
-    # while True:
-    #     time.sleep(1)
-    #     # For every item in table
-    #
-    #     trilateration_table.print()
-    #     for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-    #
-    #         # Update RSSI values between item and all receivers
-    #         sum = 0
-    #         n = 0
-    #         for rssi in beacon_info.rssi_array:
-    #             if rssi:
-    #                 sum += rssi
-    #                 n += 1
-    #         avg = sum / n
-    #
-    #         # Determine if item is on table or not
-    #         isItemOnTable = False
-    #         if avg > THRESH:
-    #             isItemOnTable = True
-    #             print(f"{beacon_info.name}: {avg} is on table") if DEBUG else None
-    #         else:
-    #             print(f"{beacon_info.name}: {avg} is not on table") if DEBUG else None
-    #
-    #
-    #         ### VOICE SEQUENCES
-    #
-    #         # Periodic voice cues
-    #         currentTime = millis()
-    #         addr = beacon_addr
-    #         if (currentTime > PERIODIC_VOICE_TIMER):
-    #             PERIODIC_VOICE_TIMER += PERIODIC_VOICE_DELTA_TIME
-    #             print(currentTime/1000)
-    #
-    #             # Voice remove distractors
-    #             print("VOICING DISTRACTOR ITEMS")
-    #             if (IP_TO_NAME.get(addr)[1] == False):
-    #                 voice.distractorPresent()
-    #
-    #             # Voice required items
-    #             print("VOICING REQUIRED ITEMS")
-    #             # requiredItemsSet \ itemsOnTable
-    #             itemsOnTable_spk = list()
-    #             for addr in itemsOnTable:
-    #                 itemsOnTable_spk.append(IP_TO_NAME.get(addr)[0])
-    #             voice.requires(requiredItemsSet.difference(itemsOnTable))
-    #
-    #         # Immediate voice cues
-    #         if (isItemOnTable):
-    #             if (not beacon_addr in itemsOnTable):
-    #                 # First added item
-    #                 itemsOnTable.add(beacon_addr)
-    #                 print("VOICING ADDED ITEM")
-    #
-    #             else:
-    #                 # First removed item
-    #                 itemsOnTable.remove(beacon_addr)
-    #                 print("VOICING REMOVED ITEM")
-    #
-    #
-    #
-    #     trilateration_table.print() if DEBUG_TAB else None
-
-
 
 
 if __name__ == '__main__':

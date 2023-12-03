@@ -41,11 +41,11 @@ class LocationEstimate(Enum):
     BOT_LEFT = 3
     BOT_RIGHT = 4
     OFF = 5
+    # Location estimate, can be directly printed in a string by just passing the object
+    # ex.
+    # selected_position = Position.TOP_LEFT
+    # print(f"You selected {selected_position}") -> prints: You selected top left
     def __str__(self): 
-        # Location estimate, can be directly printed in a string by just passing the object
-        # ex.
-        # selected_position = Position.TOP_LEFT
-        # print(f"You selected {selected_position}") -> prints: You selected top left
         return LocationEstimateToString[self]
 
 LocationEstimateToString = {
@@ -103,16 +103,22 @@ class BeaconInfo:
 
     def __repr__(self):
         if not self.required_item:
-            return f"Distractor {self.name} | {self.rssi_array} "
+            return f"Distractor {self.name} | {self.rssi_array} | {self.loc_estimate}"
         else:
-            return f"{self.name} | {self.rssi_array}"
+            return f"{self.name} | {self.rssi_array} | {self.loc_estimate}"
 
 
 class ThreadSafeTrilaterationMap:
-    def __init__(self, ip_to_name):
+
+    def __init__(self, ip_to_name, scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound):
         self.inner_map = {}
         self.lock = threading.Lock()
         self.ip_to_name = ip_to_name
+
+        self.scan0_bound = scan0_bound
+        self.scan1_inner_bound = scan1_inner_bound
+        self.scan1_outer_bound = scan1_outer_bound
+        self.scan2_bound = scan2_bound
 
     def put(self, key, value):
         with self.lock:
@@ -129,6 +135,22 @@ class ThreadSafeTrilaterationMap:
 
     def print(self):
         print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
+
+    # Return a LocationEstimate enum based on 4 rssi bounds
+    def get_location(self, beacon_info):
+        rssi = beacon_info.rssi_array
+
+        in_inner_ring = self.scan1_inner_bound > rssi[1] > self.scan1_outer_bound
+        in_scan0_bounds = rssi[0] > self.scan0_bound
+        in_scan2_bounds = rssi[2] > self.scan2_bound
+
+        if in_scan0_bounds and in_inner_ring:
+            return LocationEstimate.TOP_LEFT
+        
+        if in_scan2_bounds and in_inner_ring:
+            return LocationEstimate.TOP_RIGHT
+        
+        return LocationEstimate.OFF
     
     # Update value array specifically at scanner_id
     def update_rssi(self, key, rssi_value, scanner_id):
@@ -139,5 +161,7 @@ class ThreadSafeTrilaterationMap:
                 BeaconInfo(self.ip_to_name[key][0], self.ip_to_name[key][1]) # Create a new BeaconInfo object if not present
                 )
             
-            info.add_data(scanner_id, round(rssi_value, 2))
+            info.add_data(scanner_id, round(rssi_value, 2)) # Add new data to our rolling average
+            info.loc_estimate = self.get_location(info) # Use updated beacon data to update the location estimate
+
             self.inner_map[key] = info
