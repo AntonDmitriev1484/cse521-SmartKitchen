@@ -18,6 +18,7 @@ def scan_subscriber(trilateration_table):
             scan = request.get_json()
             trilateration_table.update_rssi(scan['addr'], scan['rssi'], ser_device_to_int[scan['device']])
 
+
             
 
             return jsonify({"status": "success"})
@@ -26,4 +27,11 @@ def scan_subscriber(trilateration_table):
     app.logger.disabled = True
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     app.run(host='0.0.0.0',port=3000)
+
+# Might want to move this to within trilateration_table, so that this happens within
+# the lock that we apply at update
+# Calculate the location based on 4 rssi bounds
+def localizer(scan1_inner_bound, scan1_outer_bound, scan0_bound, scan2_bound, beacon_info):
+    rssi = beacon_info.rssi_array
+
     
