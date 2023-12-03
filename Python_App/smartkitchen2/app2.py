@@ -1,7 +1,7 @@
 import controller
 import util
 import voice
-from server import scan_subscriber, bounds_calibration
+from server import scan_subscriber
 
 import pyttsx3
 
@@ -57,13 +57,18 @@ def calibrate_bounds_by_beacon(trilateration_table):
 
     time.sleep(6) # Wait to get an average going
     # Get the distractor BeaconInfo
-    info = trilateration_table.get("[0]C3:00:00:0B:1A:7A")
+    trilateration_table.print()
+    info = trilateration_table.get("[0]C3:00:00:0B:1A:88")
     [scan0_bound, scan1_inner_bound, scan2_bound] = info.rssi_array
     # Caution! This will be very incorrect if the bounds 
     # aren't mapped to the correct physical sensors
 
     scan1_outer_bound = (scan2_bound + scan0_bound) / 2
 
+    # Check receiver orientation consistent
+    # Check serial_id corresponds to physical device
+
+    
     trilateration_table.init_bounds(scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
 
 
@@ -74,10 +79,6 @@ def main():
     PERIODIC_VOICE_DELTA_TIME = 5000  
     PERIODIC_VOICE_TIMER = millis()
 
-    scan0_bound = -40
-    scan1_inner_bound = -50
-    scan1_outer_bound = -60
-    scan2_bound = -70
 
     # Maps ip -> BeaconInfo while also performing trilateration logic
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
@@ -93,21 +94,23 @@ def main():
         time.sleep(1)
         trilateration_table.print()
         print("\n")
-        requiredItems = []
-        proceed = True
-        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if not beacon_info.required_item:
-                beaconLocation = beacon_info.LocationEstimate
-                voice.distractorPresent(beacon_info.name, beaconLocation)
-                proceed = False
-                break
-            else:
-                requiredItems.add(beacon_info.name)
-        if proceed:
-            # outputString = ""
-            # for itemName in requiredItems:
-            #     outputString = outputString + ", " + itemName
-            voice.requires(requiredItems)
+
+        # Jason code uncomment later 
+        # requiredItems = []
+        # proceed = True
+        # for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
+        #     if not beacon_info.required_item:
+        #         beaconLocation = beacon_info.LocationEstimate
+        #         voice.distractorPresent(beacon_info.name, beaconLocation)
+        #         proceed = False
+        #         break
+        #     else:
+        #         requiredItems.add(beacon_info.name)
+        # if proceed:
+        #     # outputString = ""
+        #     # for itemName in requiredItems:
+        #     #     outputString = outputString + ", " + itemName
+        #     voice.requires(requiredItems)
 
 
 if __name__ == '__main__':

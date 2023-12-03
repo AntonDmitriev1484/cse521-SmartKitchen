@@ -123,6 +123,12 @@ class ThreadSafeTrilaterationMap:
         self.scan2_bound = scan2_bound
         self.bounds_initialized = True
 
+        print("Initialized bounds: ")
+        print("scan0_bound "+str(self.scan0_bound))
+        print("scan1_inner_bound "+str(self.scan1_inner_bound))
+        print("scan1_outer_bound "+str(self.scan1_outer_bound))
+        print("scan2_bound "+str(self.scan2_bound))
+
 
     def put(self, key, value):
         with self.lock:
@@ -169,6 +175,10 @@ class ThreadSafeTrilaterationMap:
                 key,
                 BeaconInfo(self.ip_to_name[key][0], self.ip_to_name[key][1]) # Create a new BeaconInfo object if not present
                 )
+            
+            # No idea why it doesn't make it in here for distractor
+            # if key == "[0]C3:00:00:0B:1A:7A":
+            #     print("Updating rssi for distractor")
             
             info.add_data(scanner_id, round(rssi_value, 2)) # Add new data to our rolling average
             info.loc_estimate = self.get_location(info) # Use updated beacon data to update the location estimate
