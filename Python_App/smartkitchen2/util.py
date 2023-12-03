@@ -1,6 +1,7 @@
 import sys
 import serial
 import threading
+from enum import Enum
 
 # Returns list of port names with active devices connected
 # @courtesy: https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
@@ -33,6 +34,30 @@ def average(array):
             sum += el
         return sum / len(array)
 
+
+class LocationEstimate(Enum):
+    TOP_LEFT = 1
+    TOP_RIGHT = 2
+    BOT_LEFT = 3
+    BOT_RIGHT = 4
+    OFF = 5
+    def __str__(self): 
+        # Location estimate, can be directly printed in a string by just passing the object
+        # ex.
+        # selected_position = Position.TOP_LEFT
+        # print(f"You selected {selected_position}") -> prints: You selected top left
+        return LocationEstimateToString[self]
+
+LocationEstimateToString = {
+    LocationEstimate.TOP_LEFT: "top left",
+    LocationEstimate.TOP_RIGHT: "top right",
+    LocationEstimate.BOT_LEFT: "bottom left",
+    LocationEstimate.BOT_RIGHT: "bottom right",
+    LocationEstimate.OFF: "off of the table",
+}
+
+
+
 class BeaconInfo:
     # Struct / class to deal with beacon information
 
@@ -41,9 +66,14 @@ class BeaconInfo:
         # device_id is an index to its past 3 rssi measurements for this beacon
 
         self.rssi_array = [None, None, None]
-        self.is_distractor = not is_not_distractor
-        self.name = name
         self.ROLL_AVG_SIZE = 3
+        
+        self.name = name
+
+        self.required_item = is_not_distractor
+        
+        self.coord = (0,0)
+        self.loc_estimate = LocationEstimate.OFF
 
     def add_data(self, device_id, data_point):
         # NOTE: Device should be passed as an int
@@ -72,7 +102,7 @@ class BeaconInfo:
         return
 
     def __repr__(self):
-        if self.is_distractor:
+        if not self.required_item:
             return f"Distractor {self.name} | {self.rssi_array} "
         else:
             return f"{self.name} | {self.rssi_array}"
