@@ -63,7 +63,7 @@ def main():
             # outputString = ""
             # for itemName in requiredItems:
             #     outputString = outputString + ", " + itemName
-            voice.requires(requiredITems)
+            voice.requires(requiredItems)
 
 
 

@@ -28,7 +28,7 @@ function FindDevices() {
     return foundDevicePortNames;
 }
 
-const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2'];
+const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2', '/dev/ttyACM3'];
 const SCAN_INTERVAL = 1;
 const SUBSCRIBER_URL = 'http://172.27.84.110:3000';
 

@@ -5,7 +5,8 @@ import logging
 ser_device_to_int = {
     '/dev/ttyACM0': 0,
     '/dev/ttyACM1': 1,
-    '/dev/ttyACM2': 2
+    '/dev/ttyACM2': 2,
+    '/dev/ttyACM3': 3
 }
 
 # Defines the Flask server that receives fetch requests from the scanner
