@@ -1,0 +1,116 @@
+breadn@notbrendanthatsforsure:~/cse521-SmartKitchen/NodeJS_App/BleuIO$ node index.js 
+Initializing /dev/ttyACM0
+Port open
+Sending ser_line from /dev/ttyACM0
+{ S: 317, rssi: -67, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 318, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 319, rssi: -62, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 320, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 321, rssi: -61, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 323, rssi: -70, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 326, rssi: -71, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 327, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 328, rssi: -61, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 332, rssi: -69, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 334, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 336, rssi: -61, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 337, rssi: -63, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 338, rssi: -65, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 339, rssi: -74, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 341, rssi: -64, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 342, rssi: -61, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 343, rssi: -65, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 345, rssi: -63, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 347, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 348, rssi: -67, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 350, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 351, rssi: -63, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 352, rssi: -70, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 354, rssi: -70, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 355, rssi: -69, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 356, rssi: -70, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 357, rssi: -65, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 358, rssi: -64, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 360, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 361, rssi: -67, addr: '[0]C3:00:00:0B:1A:88' }
+Sending ser_line from /dev/ttyACM0
+{ S: 361, rssi: -65, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 362, rssi: -64, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 363, rssi: -61, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 364, rssi: -68, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 366, rssi: -61, addr: '[0]C3:00:00:0B:1A:88', name: 'T3' }
+{ status: 'success' }
+Sending ser_line from /dev/ttyACM0
+{ S: 367, rssi: -65, addr: '[0]C3:00:00:0B:1A:88' }
+{ status: 'success' }
+^C
+breadn@notbrendanthatsforsure:~/cse521-SmartKitchen/NodeJS_App/BleuIO$ 
