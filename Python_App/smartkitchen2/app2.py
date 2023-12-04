@@ -91,7 +91,7 @@ def main():
     calibrate_bounds_by_beacon(trilateration_table)
 
     while True:
-        time.sleep(1)
+        time.sleep(10)
         trilateration_table.print()
         print("\n")
         requiredItems = []
