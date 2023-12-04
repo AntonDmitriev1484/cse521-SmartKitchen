@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 import logging
+from util import LocationEstimate
 
 
 ser_device_to_int = {
     '/dev/ttyACM0': 0,
     '/dev/ttyACM1': 1,
-    '/dev/ttyACM2': 2
+    '/dev/ttyACM2': 2,
+    '/dev/ttyACM3': 3
 }
 
 # Defines the Flask server that receives fetch requests from the scanner
@@ -21,5 +23,4 @@ def scan_subscriber(trilateration_table):
             return jsonify({"status": "error", "message": str(e)})
     app.logger.disabled = True
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
-    app.run(host='172.27.48.181',port=3000)
-    
+    app.run(host='0.0.0.0',port=3000)
