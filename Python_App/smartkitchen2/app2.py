@@ -58,12 +58,13 @@ def main():
                 proceed = False
                 break
             else:
-                requiredItems.add(beacon_info.name)
+                if beacon_info.LocationEstimate == "Off":
+                    requiredItems.add(beacon_info.name)
         if proceed:
             # outputString = ""
             # for itemName in requiredItems:
             #     outputString = outputString + ", " + itemName
-            voice.requires(requiredITems)
+            voice.requires(requiredItems)
 
 
 
