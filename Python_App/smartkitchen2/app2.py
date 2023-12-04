@@ -63,12 +63,25 @@ def calibrate_bounds_by_beacon(trilateration_table):
     # Caution! This will be very incorrect if the bounds 
     # aren't mapped to the correct physical sensors
 
-    scan1_outer_bound = (scan2_bound + scan0_bound) / 2
+    avg = (scan2_bound + scan0_bound) / 2
+    scan1_outer_bound = avg
+
+
+    diff = abs((scan2_bound - scan0_bound)) / 2
+    print(" Diff: "+str(diff))
+    # Centering RSSI values between beacons 0 and 2
+    # if scan2_bound > scan0_bound:
+    #     scan2_bound += diff
+    #     scan0_bound -= diff
+    # elif scan2_bound < scan0_bound:
+    #     scan0_bound += diff
+    #     scan2_bound -= diff
 
     # Check receiver orientation consistent
     # Check serial_id corresponds to physical device
 
-    
+    scan1_inner_bound = -30
+
     trilateration_table.init_bounds(scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
 
 

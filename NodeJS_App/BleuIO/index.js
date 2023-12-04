@@ -7,10 +7,13 @@ import { express } from express;
 // const app = express();
 // const port = 3000;
 
-
 const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2'];
 const SCAN_INTERVAL = 1;
 const SUBSCRIBER_URL = 'http://172.27.84.110:3000';
+
+const DEVSERIAL_TO_ID = {
+  
+}
 
 // Maps ip -> (Name, T=valid item / F=distractor)
 const IP_TO_NAME = {

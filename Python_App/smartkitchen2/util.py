@@ -41,6 +41,7 @@ class LocationEstimate(Enum):
     BOT_LEFT = 3
     BOT_RIGHT = 4
     OFF = 5
+    IDK = 6
     # Location estimate, can be directly printed in a string by just passing the object
     # ex.
     # selected_position = Position.TOP_LEFT
@@ -54,6 +55,7 @@ LocationEstimateToString = {
     LocationEstimate.BOT_LEFT: "bottom left",
     LocationEstimate.BOT_RIGHT: "bottom right",
     LocationEstimate.OFF: "off of the table",
+    LocationEstimate.IDK: "uncertain"
 }
 
 
@@ -66,7 +68,7 @@ class BeaconInfo:
         # device_id is an index to its past 3 rssi measurements for this beacon
 
         self.rssi_array = [None, None, None]
-        self.ROLL_AVG_SIZE = 3
+        self.ROLL_AVG_SIZE = 4
         
         self.name = name
 
@@ -79,6 +81,8 @@ class BeaconInfo:
         # NOTE: Device should be passed as an int
         # We have this address in our lookup table
 
+        smoothing_factor = 1.5
+
         if self.rssi_raw_data[device_id]:
             rssi_values = self.rssi_raw_data[device_id] 
             #Gives us an array of rolling average values for this beacon for this device
@@ -90,7 +94,13 @@ class BeaconInfo:
                 # We want to add more measurements to our average
                 rssi_values.append(data_point)
                 
-            new_average = average(rssi_values) # Error here -> adding 'int' to NoneType
+            #new_average = average(rssi_values) # Error here -> adding 'int' to NoneType
+            # Exponential average
+            prev_avg = self.rssi_array[device_id]
+            # new_average = smoothing_factor * (data_point - prev_avg)
+            smooth_term = (smoothing_factor / (1 + self.ROLL_AVG_SIZE))
+            new_average = (data_point * smooth_term) + (prev_avg * (1-smooth_term))
+
             self.rssi_raw_data[device_id] = rssi_values
             self.rssi_array[device_id] = round(new_average,2)
 
@@ -144,7 +154,12 @@ class ThreadSafeTrilaterationMap:
                 del self.inner_map[key]
 
     def print(self):
-        print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
+
+        for key, value in self.inner_map.items():
+            if value.name == "Pan":
+                print(f"Pan {value.name} | 0: {str(value.rssi_raw_data[0])} , 1: {value.rssi_raw_data[1]}, 2: {value.rssi_raw_data[2]}| \n{value.rssi_array} | {value.loc_estimate}")
+
+        # print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
 
     # Return a LocationEstimate enum based on 4 rssi bounds
     def get_location(self, beacon_info):
@@ -156,16 +171,28 @@ class ThreadSafeTrilaterationMap:
         rssi = beacon_info.rssi_array
 
         in_inner_ring = self.scan1_inner_bound > rssi[1] > self.scan1_outer_bound
+        
+        
         in_scan0_bounds = rssi[0] > self.scan0_bound
         in_scan2_bounds = rssi[2] > self.scan2_bound
 
         if in_scan0_bounds and in_inner_ring:
-            return LocationEstimate.TOP_LEFT
+            # upper_right_confirmation = rssi[0] < rssi[2] and rssi[1] < rssi[2]
+            # if upper_right_confirmation:
+                return LocationEstimate.TOP_RIGHT
+            # else:
+            #     return LocationEstimate.IDK
         
         if in_scan2_bounds and in_inner_ring:
-            return LocationEstimate.TOP_RIGHT
+            # upper_left_confirmation = rssi[2] > rssi[0] and rssi[1] > rssi[0]
+            # if upper_left_confirmation:
+                return LocationEstimate.TOP_LEFT
+            # else:
+            #     return LocationEstimate.IDK
+        if not in_scan0_bounds and not in_scan2_bounds:
+            return LocationEstimate.OFF
         
-        return LocationEstimate.OFF
+        return LocationEstimate.IDK
     
     # Update value array specifically at scanner_id
     def update_rssi(self, key, rssi_value, scanner_id):
