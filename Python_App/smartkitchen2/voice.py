@@ -1,5 +1,6 @@
 import pyttsx3
 import time
+import util
 
 def requires(inputArray):
     engine = pyttsx3.init()  # object creation
@@ -41,7 +42,8 @@ def distractorPresent(ItemName, ItemLoc):
     """VOICE"""
     voices = engine.getProperty('voices')  # getting details of current voice
     # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-    outputString = "Distractor present, remove the " + ItemName + " from the " + ItemLoc + " of the table."
+    location = util.LocationEstimateToString[ItemLoc]
+    outputString = "Distractor present, remove the " + ItemName + " from the " + location + " of the table."
     print(outputString)
     engine.say(outputString)
     engine.runAndWait()

@@ -91,19 +91,21 @@ def main():
     calibrate_bounds_by_beacon(trilateration_table)
 
     while True:
-        time.sleep(10)
+        time.sleep(5)
         trilateration_table.print()
         print("\n")
         requiredItems = []
         proceed = True
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if not beacon_info.required_item:
-                beaconLocation = beacon_info.LocationEstimate
+            if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                beaconLocation = beacon_info.loc_estimate
                 voice.distractorPresent(beacon_info.name, beaconLocation)
                 proceed = False
                 break
-            else:
-                if beacon_info.LocationEstimate == "Off":
+            elif beacon_info.required_item:
+                if beacon_info.loc_estimate == util.LocationEstimate.OFF:  # CHANGE THIS
+                    print("beacon name: ")
+                    print(beacon_info.name)
                     requiredItems.append(beacon_info.name)
         if proceed:
             # outputString = ""

@@ -75,28 +75,42 @@ def main():
     PERIODIC_VOICE_TIMER = millis()
 
     # Maps ip -> BeaconInfo while also performing trilateration logic
-    trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
+    trilateration_table = []
+    beacon1 = util.BeaconInfo("Spoon", False)
+    beacon1.loc_estimate = util.LocationEstimate.OFF
+    beacon2 = util.BeaconInfo("Fork", True)
+    beacon2.loc_estimate = util.LocationEstimate.OFF
+    # beaconAddress = "1"
+    trilateration_table.append(beacon1)
+    trilateration_table.append(beacon2)
 
-    scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
-    scanner_thread.start()
+
+    # scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
+    # scanner_thread.start()
 
     # Blocks for 6 seconds to callibrate the table's RSSI bounds
-    calibrate_bounds_by_beacon(trilateration_table)
+    # calibrate_bounds_by_beacon(trilateration_table)
 
     while True:
-        time.sleep(10)
-        trilateration_table.print()
+        time.sleep(2)
+        # trilateration_table.print()
         print("\n")
         requiredItems = []
         proceed = True
-        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if not beacon_info.required_item:
-                beaconLocation = beacon_info.LocationEstimate
+        for beacon_info in trilateration_table:
+            print(beacon_info.name)
+            # print("here")
+            print(beacon_info.required_item)
+            if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF: #Change this
+                beaconLocation = beacon_info.loc_estimate #CHANGE THIS
                 voice.distractorPresent(beacon_info.name, beaconLocation)
                 proceed = False
                 break
-            else:
-                if beacon_info.LocationEstimate == "Off":
+            elif beacon_info.required_item: #change this
+                print(beacon_info.loc_estimate)
+                if beacon_info.loc_estimate == util.LocationEstimate.OFF: # CHANGE THIS
+                    print("beacon name: ")
+                    print(beacon_info.name)
                     requiredItems.append(beacon_info.name)
         if proceed:
             # outputString = ""
