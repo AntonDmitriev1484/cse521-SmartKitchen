@@ -104,7 +104,7 @@ def main():
                 break
             else:
                 if beacon_info.LocationEstimate == "Off":
-                    requiredItems.add(beacon_info.name)
+                    requiredItems.append(beacon_info.name)
         if proceed:
             # outputString = ""
             # for itemName in requiredItems:
