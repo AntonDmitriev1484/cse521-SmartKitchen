@@ -47,6 +47,7 @@ DEBUG_TAB = True
 PAN_ADDR = "[0]C3:00:00:0B:1A:88"
 ACTIVATION_MARGIN = 5	# this should be a margin to ignore "noise" in receiver
 						# may need a threshold margin per receiver
+ON_BOUNDARY_MARGIN = 5  # an margin for determining what is on table
 CALIB_RSSI = []		# the offset and threshold per RSSI at ith index
 
 
@@ -81,16 +82,17 @@ CALIB_RSSI = []		# the offset and threshold per RSSI at ith index
 
 
 # Note: calibrate by placing PAN tag in middle of table
-def calibrate(trilateration_table):
-    time.sleep(6) # Wait to get an average going
-	
-    for rssi in trilateration_table.get(PAN_ADDR).rssi_array:
-        CALIB_RSSI.append(rssi)
+def calibrate(trilateration_table, time):
+    time.sleep(time) # Wait to get an average going
+    rssi_arr = trilateration_table.get(PAN_ADDR).rssi_array
+
+    for i in range(0,len(rssi_arr)):
+        CALIB_RSSI[i] = rssi_arr[i]
 
 
 def locate(beacon_addr, trilateration_table):
-    initial_halfpos = ""
-    final_halfpos = ""
+    pos = ""
+    on_table = False
     beacon_rssis = trilateration_table.get(beacon_addr).rssi_array
 
     ## calculate the offset per receiver
@@ -98,68 +100,67 @@ def locate(beacon_addr, trilateration_table):
     for i in range(0,len(beacon_rssis)):
         recv_pair = (beacon_rssis[i] - CALIB_RSSI[i], recv_enum(i))
         rssi_offsets.append(recv_pair)
-    print("RSSI OFFSETS:")
-    print(rssi_offsets)
-    
+
+    ## calculate the bounds
+    in_bounds = [beacon_rssis[i] > CALIB_RSSI[i] for i in range(0,len(beacon_rssis))]
+
     ## sort list in order of strongest first
     rssi_offsets = sorted(rssi_offsets, key=lambda x: x[0], reverse=True)
 
-    ## determine initial half-position
+    ## determine position
     dir_recvs = {rssi_offsets[0][1], rssi_offsets[1][1]}
-    print("DIRECTION RECEIVERS")
-    print(dir_recvs)
     if (Recv.TOP_LEFT in dir_recvs and Recv.TOP_RIGHT in dir_recvs):
         # Top
-        print("In top")
-        initial_halfpos = "top"
+        pos = "top"
+        # Check for bounds (must be within BOTH TOP receivers)
+        if (in_bounds[Recv.TOP_LEFT] and in_bounds[Recv.TOP_RIGHT]):
+            on_table = True
 
     elif (Recv.BOT_LEFT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         # Bottom
-        print("In bot")
-        initial_halfpos = "bot"
+        pos = "bottom"
+        # Bounds check
+        if (in_bounds[Recv.BOT_LEFT] and in_bounds[Recv.BOT_RIGHT]):
+            on_table = True
 
     elif (Recv.TOP_LEFT in dir_recvs and Recv.BOT_LEFT in dir_recvs):
         # Left
-        print("In left")
-        initial_halfpos = "left"
+        pos = "left"
+        # Bounds check
+        if (in_bounds[Recv.TOP_LEFT] and in_bounds[Recv.BOT_RIGHT]):
+            on_table = True
 
     elif (Recv.TOP_RIGHT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         # Right
-        print("In right")
-        initial_halfpos = "right"
+        pos = "right"
+        # Bounds check
+        if (in_bounds[Recv.TOP_RIGHT] and in_bounds[Recv.BOT_RIGHT]):
+            on_table = True
 
-    ## determine if is on table based on initial half-position
-    # if is TOP or BOT, check opposite receiver CALIB_RSSI thresholds
-    # else if LEFT or RIGHT, check same receiver CALIB_RSSI thresholds
+    ## debug prints
+    for i in range(0,len(beacon_rssis)):
+        print(f"R:{recv_enum(i).name}\tB:{in_bounds[i]}\tOffset:{rssi_offsets[i]}")
+    print(f"DIRECTION RECEIVERS {dir_recvs}")
+    print(f"\n === RESULT: {'On table' if on_table else 'Off table'} {pos}")
 
-
-    ## determine final half-position
-    # if in TOP, choose     max(TOP_LEFT, TOP_RIGHT)
-    # if in BOT, choose     max(BOT_LEFT, BOT_RIGHT)
-    # if in LEFT, choose     max(TOP_LEFT, BOT_LEFT)
-    # if in RIGHT, choose    max(TOP_RIGHT, BOT_RIGHT)
-
-    # print(initial_halfpos, final_halfpos)
-
-    return (initial_halfpos, final_halfpos)
+    return (pos, on_table)
 
 
 def main():
     # Maps ip -> BeaconInfo while also performing trilateration logic
     trilateration_table = util.ThreadSafeTrilaterationMap(IP_TO_NAME)
 
-
     scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
 
     # Blocks for 6 seconds to callibrate the table's RSSI bounds
-    calibrate(trilateration_table)
+    calibrate(trilateration_table, 6)
 
     while True:
         trilateration_table.print()
         print("\n")
         time.sleep(1)
-
+        calibrate(trilateration_table,0)  # perform instantaneous calibration
         locate(PAN_ADDR, trilateration_table)
 
         # Temporarily commenting out Jason code (UP TO DATE)
