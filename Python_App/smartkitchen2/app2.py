@@ -113,28 +113,28 @@ def locate(beacon_addr, trilateration_table):
         # Top
         pos = "top"
         # Check for bounds (must be within BOTH TOP receivers)
-        if (in_bounds[Recv.TOP_LEFT] and in_bounds[Recv.TOP_RIGHT]):
+        if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.TOP_RIGHT.value]):
             on_table = True
 
     elif (Recv.BOT_LEFT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         # Bottom
         pos = "bottom"
         # Bounds check
-        if (in_bounds[Recv.BOT_LEFT] and in_bounds[Recv.BOT_RIGHT]):
+        if (in_bounds[Recv.BOT_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
 
     elif (Recv.TOP_LEFT in dir_recvs and Recv.BOT_LEFT in dir_recvs):
         # Left
         pos = "left"
         # Bounds check
-        if (in_bounds[Recv.TOP_LEFT] and in_bounds[Recv.BOT_RIGHT]):
+        if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
 
     elif (Recv.TOP_RIGHT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         # Right
         pos = "right"
         # Bounds check
-        if (in_bounds[Recv.TOP_RIGHT] and in_bounds[Recv.BOT_RIGHT]):
+        if (in_bounds[Recv.TOP_RIGHT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
 
     ## debug prints
