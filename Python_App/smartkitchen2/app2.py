@@ -47,7 +47,7 @@ DEBUG_TAB = True
 
 ACTIVATION_MARGIN = 5	# this should be a margin to ignore "noise" in receiver
 						# may need a threshold margin per receiver
-ON_TABLE_MARGIN = 0     # an margin for determining what is on table
+ON_TABLE_MARGIN = 5     # an margin for determining what is on table (pos --> less strict bounds)
 CALIB_RSSI = [0,0,0,0]		# the offset and threshold per RSSI at ith index
 
 
@@ -77,40 +77,36 @@ def locate(beacon_addr, trilateration_table):
         rssi_offsets.append(recv_pair)
 
     ## calculate the bounds
-    in_bounds = [beacon_rssis[i] > CALIB_RSSI[i] for i in range(0,len(beacon_rssis))]
-
-    ## sort list in order of strongest first
-    rssi_offsets = sorted(rssi_offsets, key=lambda x: x[0], reverse=True)
+    in_bounds = [beacon_rssis[i] > (CALIB_RSSI[i] - ON_TABLE_MARGIN) for i in range(0,len(beacon_rssis))]
 
     ## determine position
-    dir_recvs = {rssi_offsets[0][1], rssi_offsets[1][1]}
+    rssi_offsets_sorted = sorted(rssi_offsets, key=lambda x: x[0], reverse=True)
+    dir_recvs = {rssi_offsets_sorted[0][1], rssi_offsets_sorted[1][1]}              # set of first two strongest RSSIs
     if (Recv.TOP_LEFT in dir_recvs and Recv.TOP_RIGHT in dir_recvs):
-        # Top
         pos = "top"
         # Check for bounds (must be within BOTH TOP receivers)
         if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.TOP_RIGHT.value]):
             on_table = True
 
     elif (Recv.BOT_LEFT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
-        # Bottom
         pos = "bottom"
         # Bounds check
         if (in_bounds[Recv.BOT_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
 
     elif (Recv.TOP_LEFT in dir_recvs and Recv.BOT_LEFT in dir_recvs):
-        # Left
         pos = "left"
         # Bounds check
         if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
 
     elif (Recv.TOP_RIGHT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
-        # Right
         pos = "right"
         # Bounds check
         if (in_bounds[Recv.TOP_RIGHT.value] and in_bounds[Recv.BOT_RIGHT.value]):
             on_table = True
+    else:
+        pos = "uncertain"
 
     ## debug prints
     for i in range(0,len(beacon_rssis)):
