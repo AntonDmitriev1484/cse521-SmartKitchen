@@ -110,7 +110,7 @@ def locate(beacon_addr, trilateration_table):
 
     ## debug prints
     for i in range(0,len(beacon_rssis)):
-        print(f"R:{recv_enum(i).name}\tB:{in_bounds[i]}\tOffset:{rssi_offsets[i]}")
+        print(f"R:{recv_enum(i).name}\tB:{in_bounds[i]}\tOffset:{rssi_offsets[i][0]}")
     print(f"DIRECTION RECEIVERS {dir_recvs}")
     print(f"\n === RESULT: {'On table' if on_table else 'Off table'} {pos}")
 
