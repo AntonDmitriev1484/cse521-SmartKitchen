@@ -14,8 +14,8 @@ from enum import Enum
 class Recv(Enum):
 	TOP_LEFT = 3
 	BOT_LEFT = 2
-	BOT_RIGHT = 0
-	TOP_RIGHT = 1
+	BOT_RIGHT = 1
+	TOP_RIGHT = 0
 def recv_enum(i):
     for recv in Recv:
         if recv.value == i:
