@@ -48,7 +48,7 @@ PAN_ADDR = "[0]C3:00:00:0B:1A:88"
 ACTIVATION_MARGIN = 5	# this should be a margin to ignore "noise" in receiver
 						# may need a threshold margin per receiver
 ON_BOUNDARY_MARGIN = 5  # an margin for determining what is on table
-CALIB_RSSI = []		# the offset and threshold per RSSI at ith index
+CALIB_RSSI = [0,0,0,0]		# the offset and threshold per RSSI at ith index
 
 
 """ HELPER FUNCTIONS """
