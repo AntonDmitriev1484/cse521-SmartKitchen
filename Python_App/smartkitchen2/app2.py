@@ -8,14 +8,13 @@ import pyttsx3
 
 import threading
 import time
-import requests
 
 from enum import Enum
 
 class Recv(Enum):
 	TOP_LEFT = 0
-	BOT_LEFT = 1
-	BOT_RIGHT = 2
+	BOT_LEFT = 2
+	BOT_RIGHT = 1
 	TOP_RIGHT = 3
 def recv_enum(i):
     for recv in Recv:
