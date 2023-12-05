@@ -12,10 +12,10 @@ import time
 from enum import Enum
 
 class Recv(Enum):
-	TOP_LEFT = 0
+	TOP_LEFT = 3
 	BOT_LEFT = 2
-	BOT_RIGHT = 1
-	TOP_RIGHT = 3
+	BOT_RIGHT = 0
+	TOP_RIGHT = 1
 def recv_enum(i):
     for recv in Recv:
         if recv.value == i:
@@ -82,8 +82,8 @@ CALIB_RSSI = []		# the offset and threshold per RSSI at ith index
 
 
 # Note: calibrate by placing PAN tag in middle of table
-def calibrate(trilateration_table, time):
-    time.sleep(time) # Wait to get an average going
+def calibrate(trilateration_table, calib_time):
+    time.sleep(calib_time) # Wait to get an average going
     rssi_arr = trilateration_table.get(PAN_ADDR).rssi_array
 
     for i in range(0,len(rssi_arr)):
