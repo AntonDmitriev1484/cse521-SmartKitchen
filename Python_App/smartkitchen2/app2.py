@@ -90,27 +90,27 @@ def main():
     calibrate_bounds_by_beacon(trilateration_table)
 
     while True:
-        time.sleep(1)
         trilateration_table.print()
         print("\n")
-
-        # Jason code uncomment later 
-        # requiredItems = []
-        # proceed = True
-        # for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-        #     if not beacon_info.required_item:
-        #         beaconLocation = beacon_info.LocationEstimate
-        #         voice.distractorPresent(beacon_info.name, beaconLocation)
-        #         proceed = False
-        #         break
-        #     else:
-        #         requiredItems.add(beacon_info.name)
-        # if proceed:
-        #     # outputString = ""
-        #     # for itemName in requiredItems:
-        #     #     outputString = outputString + ", " + itemName
-        #     voice.requires(requiredItems)
-
+        
+        time.sleep(5)
+        trilateration_table.print()
+        print("\n")
+        requiredItems = []
+        proceed = True
+        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
+            if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                beaconLocation = beacon_info.loc_estimate
+                voice.distractorPresent(beacon_info.name, beaconLocation)
+                proceed = False
+                break
+            elif beacon_info.required_item:
+                if beacon_info.loc_estimate == util.LocationEstimate.OFF:  # CHANGE THIS
+                    print("beacon name: ")
+                    print(beacon_info.name)
+                    requiredItems.append(beacon_info.name)
+        if proceed:
+            voice.requires(requiredItems)
 
 if __name__ == '__main__':
     main()
