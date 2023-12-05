@@ -28,9 +28,11 @@ function FindDevices() {
     return foundDevicePortNames;
 }
 
-const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2', '/dev/ttyACM3'];
+// Connecting in order, should be consistent with ACM tag
+
+const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2','/dev/ttyACM3'];
 const SCAN_INTERVAL = 1;
-const SUBSCRIBER_URL = 'http://172.27.84.110:3000';
+const SUBSCRIBER_URL = 'http://172.27.84.207:3000';
 
 // Maps ip -> (Name, T=valid item / F=distractor)
 const IP_TO_NAME = {
@@ -57,9 +59,9 @@ DevicePaths.forEach(
         await CreateScanner(port, SCAN_INTERVAL,
             // Pass in a function, POSTs each ser_line to a Python server
             (ser_line) => {
-              
+             	// PATHLOSS DEBUG: hardcode check for our BLE calibration tag ([0]C3:00:00:0B:1A:88) 
+                //if (ser_line.addr == "[0]C3:00:00:0B:1A:7A") {
                 if (IP_TO_NAME[ser_line.addr]) {
-
                   const update = {
                     'device':port,
                     'addr':ser_line.addr,
