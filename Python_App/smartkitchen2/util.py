@@ -42,6 +42,9 @@ class LocationEstimate(Enum):
     BOT_RIGHT = 4
     OFF = 5
     IDK = 6
+    CENTER = 7
+    LEFT = 8
+    RIGHT = 9
     # Location estimate, can be directly printed in a string by just passing the object
     # ex.
     # selected_position = Position.TOP_LEFT
@@ -55,7 +58,10 @@ LocationEstimateToString = {
     LocationEstimate.BOT_LEFT: "bottom left",
     LocationEstimate.BOT_RIGHT: "bottom right",
     LocationEstimate.OFF: "off of the table",
-    LocationEstimate.IDK: "uncertain"
+    LocationEstimate.IDK: "uncertain",
+    LocationEstimate.CENTER: "center",
+    LocationEstimate.LEFT: "left",
+    LocationEstimate.RIGHT: "right"
 }
 
 
@@ -64,17 +70,15 @@ class BeaconInfo:
     # Struct / class to deal with beacon information
 
     def __init__(self, name, is_not_distractor):
-        self.rssi_raw_data = [[], [], []] 
-        # device_id is an index to its past 3 rssi measurements for this beacon
-
-        self.rssi_array = [None, None, None]
+        self.rssi_raw_data = [[], [], [], []]
         self.ROLL_AVG_SIZE = 4
+
+        self.rssi_array = [None, None, None, None]
         
         self.name = name
 
         self.required_item = is_not_distractor
         
-        self.coord = (0,0)
         self.loc_estimate = LocationEstimate.OFF
 
     def add_data(self, device_id, data_point):
@@ -126,18 +130,11 @@ class ThreadSafeTrilaterationMap:
         self.bounds_initialized = False
 
 
-    def init_bounds(self, scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound):
-        self.scan0_bound = scan0_bound
-        self.scan1_inner_bound = scan1_inner_bound
-        self.scan1_outer_bound = scan1_outer_bound
-        self.scan2_bound = scan2_bound
-        self.bounds_initialized = True
+    def init_bounds(self, calibration_rssi_bounds):
+        self.bounds = calibration_rssi_bounds
 
         print("Initialized bounds: ")
-        print("scan0_bound "+str(self.scan0_bound))
-        print("scan1_inner_bound "+str(self.scan1_inner_bound))
-        print("scan1_outer_bound "+str(self.scan1_outer_bound))
-        print("scan2_bound "+str(self.scan2_bound))
+        print(str(self.bounds))
 
 
     def put(self, key, value):
@@ -155,44 +152,47 @@ class ThreadSafeTrilaterationMap:
 
     def print(self):
 
-        for key, value in self.inner_map.items():
-            if value.name == "Pan":
-                print(f"Pan {value.name} | 0: {str(value.rssi_raw_data[0])} , 1: {value.rssi_raw_data[1]}, 2: {value.rssi_raw_data[2]}| \n{value.rssi_array} | {value.loc_estimate}")
+        # for key, value in self.inner_map.items():
+        #     if value.name == "Pan":
+        #         print(f"Pan {value.name} | 0: {str(value.rssi_raw_data[0])} , 1: {value.rssi_raw_data[1]}, 2: {value.rssi_raw_data[2]}| \n{value.rssi_array} | {value.loc_estimate}")
 
-        # print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
+        print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
 
     # Return a LocationEstimate enum based on 4 rssi bounds
-    def get_location_3(self, beacon_info):
+    def get_location_4(self, beacon_info):
 
         # While we callibrate, don't do any bounds estimates
         if not self.bounds_initialized:
             return LocationEstimate.OFF
         
         rssi = beacon_info.rssi_array
+        bounds = self.bounds
 
-        in_inner_ring = self.scan1_inner_bound > rssi[1] > self.scan1_outer_bound
-        
-        
-        in_scan0_bounds = rssi[0] > self.scan0_bound
-        in_scan2_bounds = rssi[2] > self.scan2_bound
+        in_bounds = []
+        in_center = False
+        for i in range(0,4):
+            in_bounds.append(rssi[i] > bounds[i])
+            in_center = in_center and in_bounds[i] # in_center is true if in bounds of all
 
-        if in_scan0_bounds and in_inner_ring:
-            # upper_right_confirmation = rssi[0] < rssi[2] and rssi[1] < rssi[2]
-            # if upper_right_confirmation:
-                return LocationEstimate.TOP_RIGHT
-            # else:
-            #     return LocationEstimate.IDK
-        
-        if in_scan2_bounds and in_inner_ring:
-            # upper_left_confirmation = rssi[2] > rssi[0] and rssi[1] > rssi[0]
-            # if upper_left_confirmation:
-                return LocationEstimate.TOP_LEFT
-            # else:
-            #     return LocationEstimate.IDK
-        if not in_scan0_bounds and not in_scan2_bounds:
-            return LocationEstimate.OFF
-        
-        return LocationEstimate.IDK
+
+        sense_left = (in_bounds[3] and in_bounds[2]) 
+        sense_left = sense_left or (in_bounds[3] and in_bounds[2] and in_bounds[1])
+        sense_left = sense_left or (in_bounds[3] and in_bounds[2] and in_bounds[0])
+
+        sense_right = (in_bounds[1] and in_bounds[0]) # This is actually testing sense_right or on_center
+        sense_right = sense_right or (in_bounds[0] and in_bounds[1] and in_bounds[3])
+        sense_right = sense_right or (in_bounds[0] and in_bounds[1] and in_bounds[2])
+
+        on_left = sense_left and not in_center
+        on_right = sense_right and not in_center
+
+
+        if in_center: return LocationEstimate.CENTER
+        if on_left: return LocationEstimate.LEFT
+        if on_right: return LocationEstimate.RIGHT
+
+        return LocationEstimate.OFF
+
     
     # Update value array specifically at scanner_id
     def update_rssi(self, key, rssi_value, scanner_id):

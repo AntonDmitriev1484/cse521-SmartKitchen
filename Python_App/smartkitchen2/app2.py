@@ -52,37 +52,23 @@ def calibrateThresholds(iters, beaconAddr):
 
 
 def calibrate_bounds_by_beacon(trilateration_table):
-    # use the distractor to callibrate bounds
-    # Basically just look at its average rssi values from each scanner, and return those in an array
-
     time.sleep(6) # Wait to get an average going
     # Get the distractor BeaconInfo
     trilateration_table.print()
-    info = trilateration_table.get("[0]C3:00:00:0B:1A:88")
-    [scan0_bound, scan1_inner_bound, scan2_bound] = info.rssi_array
-    # Caution! This will be very incorrect if the bounds 
-    # aren't mapped to the correct physical sensors
 
-    avg = (scan2_bound + scan0_bound) / 2
-    scan1_outer_bound = avg
+    beacon_on_sensor = {
+         0: "[0]C3:00:00:0B:1A:87", # 0 opposite Timer
+         1: "[0]C3:00:00:0B:1A:88", # 1 opposite Pan
+         2: "[0]C3:00:00:0B:1A:79", # 2 opposite Cork hot pad
+         3: "[0]C3:00:00:0B:1A:8A", #3 opposite 1/4 Measure Spoon
+    }
+    
 
+    bounds = []
+    for i in range(0,4):
+        bounds.append(trilateration_table.get(beacon_on_sensor[i]))
 
-    diff = abs((scan2_bound - scan0_bound)) / 2
-    print(" Diff: "+str(diff))
-    # Centering RSSI values between beacons 0 and 2
-    # if scan2_bound > scan0_bound:
-    #     scan2_bound += diff
-    #     scan0_bound -= diff
-    # elif scan2_bound < scan0_bound:
-    #     scan0_bound += diff
-    #     scan2_bound -= diff
-
-    # Check receiver orientation consistent
-    # Check serial_id corresponds to physical device
-
-    scan1_inner_bound = -30
-
-    trilateration_table.init_bounds(scan0_bound, scan1_inner_bound, scan1_outer_bound, scan2_bound)
+    trilateration_table.init_bounds(bounds)
 
 
         
