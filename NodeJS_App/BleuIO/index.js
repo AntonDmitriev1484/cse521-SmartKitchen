@@ -1,38 +1,18 @@
 import CreateScanner from './bleuio_controller.js'
 import { SerialPort } from "serialport";
 
-// courtesy of https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
-function FindDevices() {
-    let foundDevicePortNames = []
-    if (process.platform.startsWith('linux')) {
-        for (let i = 0; i < 256; i++) {
-          const port = `/dev/ttyACM${i}`;
-          try {
-            const serial = new SerialPort(port);
-            serial.close();
-            foundDevicePortNames.push(port);
-          } catch (error) {
-            console.log(error);
-            // Ignore errors
-          }
-        }
-      }
-      else {
-        console.log(" YOU SHOULD BE RUNNING THIS ON LINUX ON THE PI ");
-      }
+import { express } from express;
 
-    if (foundDevicePortNames.length === 0) {
-      console.log('Found no devices');
-    }
-
-    return foundDevicePortNames;
-}
 
 // Connecting in order, should be consistent with ACM tag
 
 const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2','/dev/ttyACM3'];
 const SCAN_INTERVAL = 1;
 const SUBSCRIBER_URL = 'http://172.27.84.207:3000';
+
+const DEVSERIAL_TO_ID = {
+  
+}
 
 // Maps ip -> (Name, T=valid item / F=distractor)
 const IP_TO_NAME = {
@@ -50,7 +30,12 @@ const IP_TO_NAME = {
   "[0]C3:00:00:0B:1A:79" : ("Cork Hot Pad", true),
 }
 
-DevicePaths.forEach(
+// app.get('/get-calibration-point', (req, res) => {
+// })
+
+
+//app.get('/run', (req, res) => {
+  DevicePaths.forEach(
     async (port) => { // CHECK: port is the port of receiver?
         console.log(`Initializing ${port}`);
         // Associate the device with an ADDR to RSSI map
@@ -67,7 +52,6 @@ DevicePaths.forEach(
                     'addr':ser_line.addr,
                     'rssi':ser_line.rssi
                   }
-
                     // If this is one of our BLE beacons
                     console.log(`Sending ser_line from ${port}`);
                     console.log(ser_line);
@@ -95,8 +79,11 @@ DevicePaths.forEach(
                 // to our map. Apply ser_line to the map that corresponds to our device.
                 // AddressToRssi_ByDevice[port][ser_line.addr] = ser_line.rssi
             }
-
         )
     }
     );
+
+
+//})
+
 
