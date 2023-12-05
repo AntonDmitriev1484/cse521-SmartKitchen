@@ -38,48 +38,20 @@ IP_TO_NAME = {
   "Placeholder" : ("Metal Spoon", True),
   "[0]C3:00:00:0B:1A:79" : ("Cork Hot Pad", True),
 }
-
+PAN_ADDR = "[0]C3:00:00:0B:1A:88"       # temp
+TIMER_ADDR = "[0]C3:00:00:0B:1A:87"     # temp
 
 THRESH = -70
 DEBUG = False
 DEBUG_TAB = True
 
-PAN_ADDR = "[0]C3:00:00:0B:1A:88"
 ACTIVATION_MARGIN = 5	# this should be a margin to ignore "noise" in receiver
 						# may need a threshold margin per receiver
-ON_BOUNDARY_MARGIN = 5  # an margin for determining what is on table
+ON_TABLE_MARGIN = 0     # an margin for determining what is on table
 CALIB_RSSI = [0,0,0,0]		# the offset and threshold per RSSI at ith index
 
 
 """ HELPER FUNCTIONS """
-
-# def calibrate_bounds_by_beacon(trilateration_table):
-#     time.sleep(6) # Wait to get an average going
-#     # Get the distractor BeaconInfo
-#     trilateration_table.print()
-
-#     beacon_on_sensor = {
-#          0: "[0]C3:00:00:0B:1A:87", # 0 opposite Timer
-#          1: "[0]C3:00:00:0B:1A:88", # 1 opposite Pan
-#          2: "[0]C3:00:00:0B:1A:79", # 2 opposite Cork hot pad
-#          3: "[0]C3:00:00:0B:1A:8A", #3 opposite 1/4 Measure Spoon
-#     }
-    
-
-#     bounds = [
-#          trilateration_table.get(beacon_on_sensor[1]).rssi_array[0],
-#          trilateration_table.get(beacon_on_sensor[2]).rssi_array[1],
-#          trilateration_table.get(beacon_on_sensor[3]).rssi_array[2],
-#          trilateration_table.get(beacon_on_sensor[0]).rssi_array[3]
-#     ]
-#     # for i in range(0,4):
-#     #     bounds.append(trilateration_table.get(beacon_on_sensor[i]).rssi_array[i])
-
-#     avg = average(bounds)
-#     for i in range(0,4):
-#         bounds[i] = avg
-#     trilateration_table.init_bounds(bounds)
-
 
 # Note: calibrate by placing PAN tag in middle of table
 def calibrate(trilateration_table, calib_time):
@@ -88,6 +60,9 @@ def calibrate(trilateration_table, calib_time):
 
     for i in range(0,len(rssi_arr)):
         CALIB_RSSI[i] = rssi_arr[i]
+
+        # debug prints
+        print(f"{recv_enum(i).name} threshold: {CALIB_RSSI[i] - ON_TABLE_MARGIN}")
 
 
 def locate(beacon_addr, trilateration_table):
