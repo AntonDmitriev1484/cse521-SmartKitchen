@@ -135,24 +135,25 @@ def main():
         locate(TIMER_ADDR, trilateration_table)
 
         # Temporarily commenting out Jason code (UP TO DATE)
-        # time.sleep(5)
-        # trilateration_table.print()
-        # print("\n")
-        # requiredItems = []
-        # proceed = True
-        # for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-        #     if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
-        #         beaconLocation = beacon_info.loc_estimate
-        #         voice.distractorPresent(beacon_info.name, beaconLocation)
-        #         proceed = False
-        #         break
-        #     elif beacon_info.required_item:
-        #         if beacon_info.loc_estimate == util.LocationEstimate.OFF:  # CHANGE THIS
-        #             print("beacon name: ")
-        #             print(beacon_info.name)
-        #             requiredItems.append(beacon_info.name)
-        # if proceed:
-        #     voice.requires(requiredItems)
+        time.sleep(7)
+
+        items_required = []
+        proceed = True
+
+        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
+            if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                beaconLocation = beacon_info.loc_estimate
+                voice.distractorPresent(beacon_info.name, beaconLocation)
+                proceed = False
+                break
+            elif beacon_info.required_item:
+                if beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                    # print("beacon name: ")
+                    # print(beacon_info.name)
+                    items_required.append(beacon_info.name)
+
+        if proceed:
+            voice.requires(items_required)
 
 if __name__ == '__main__':
     main()

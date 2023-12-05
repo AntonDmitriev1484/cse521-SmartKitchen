@@ -12,7 +12,19 @@ export default function init_bleuIO(portPath) {
       stopBits: 1,
     });
 
-    port.on('open', () => console.log('Port open'));
+    port.on('open', () => {
+      
+      console.log('Port open')
+        port.get((err, info) => {
+          if (err) {
+            console.error('Error getting device information:', err.message);
+          } else {
+            console.log('Device information:', info);
+          }
+        }
+        )
+    }
+    );
   
     const writeData = async (cmd) => {
         port.write(cmd + "\r\n", (err) => {
