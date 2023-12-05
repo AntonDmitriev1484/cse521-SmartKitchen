@@ -136,7 +136,7 @@ def main():
         print("\n")
         time.sleep(1)
         calibrate(trilateration_table,0)  # perform instantaneous calibration
-        locate(PAN_ADDR, trilateration_table)
+        locate(TIMER_ADDR, trilateration_table)
 
         # Temporarily commenting out Jason code (UP TO DATE)
         # time.sleep(5)
