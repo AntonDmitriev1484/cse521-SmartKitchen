@@ -1,18 +1,19 @@
 import CreateScanner from './bleuio_controller.js'
 import { SerialPort } from "serialport";
 
-import { express } from express;
+// import { express } from express;
 
 
 // Connecting in order, should be consistent with ACM tag
 
 const DevicePaths = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyACM2','/dev/ttyACM3'];
 const SCAN_INTERVAL = 1;
-const SUBSCRIBER_URL = 'http://172.27.84.207:3000';
+const SUBSCRIBER_URL = 'http://172.27.177.163:3000';
 
-const DEVSERIAL_TO_ID = {
-  
-}
+// AT+DIS to find the serial number of the BleuIO running on each port
+// You can run ./findDev.sh on the pi to figure out the serial code of each pi
+// Try to figure out a way to do this in js
+
 
 // Maps ip -> (Name, T=valid item / F=distractor)
 const IP_TO_NAME = {
@@ -33,6 +34,21 @@ const IP_TO_NAME = {
 // app.get('/get-calibration-point', (req, res) => {
 // })
 
+// Exec is the kind of asynchronous that doesn't let you await
+
+// await exec('~/findDev.sh', (error, stdout, stderr) => {
+//     if (error) {
+//       console.error(`Error executing script: ${error.message}`);
+//       return;
+//     }
+
+//     console.log('Script output:', stdout);
+
+//     if (stderr) {
+//       console.error('Script errors:', stderr);
+//     }
+//   }
+//   );
 
 //app.get('/run', (req, res) => {
   DevicePaths.forEach(
