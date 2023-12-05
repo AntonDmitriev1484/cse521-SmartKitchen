@@ -162,7 +162,7 @@ class ThreadSafeTrilaterationMap:
         # print(*[f"{key}: {value}" for key, value in self.inner_map.items()], sep="\n")
 
     # Return a LocationEstimate enum based on 4 rssi bounds
-    def get_location(self, beacon_info):
+    def get_location_3(self, beacon_info):
 
         # While we callibrate, don't do any bounds estimates
         if not self.bounds_initialized:
@@ -208,6 +208,6 @@ class ThreadSafeTrilaterationMap:
             #     print("Updating rssi for distractor")
             
             info.add_data(scanner_id, round(rssi_value, 2)) # Add new data to our rolling average
-            info.loc_estimate = self.get_location(info) # Use updated beacon data to update the location estimate
-
+            # info.loc_estimate = self.get_location_3(info) # Use updated beacon data to update the location estimate
+            info.loc_estimate = self.get_location_4(info) # Use updated beacon data to update the location estimate
             self.inner_map[key] = info
