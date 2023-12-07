@@ -45,6 +45,8 @@ class LocationEstimate(Enum):
     CENTER = 7
     LEFT = 8
     RIGHT = 9
+    TOP = 10
+    BOTTOM = 11
     # Location estimate, can be directly printed in a string by just passing the object
     # ex.
     # selected_position = Position.TOP_LEFT
@@ -61,7 +63,9 @@ LocationEstimateToString = {
     LocationEstimate.IDK: "uncertain",
     LocationEstimate.CENTER: "center",
     LocationEstimate.LEFT: "left",
-    LocationEstimate.RIGHT: "right"
+    LocationEstimate.RIGHT: "right",
+     LocationEstimate.TOP: "top",
+    LocationEstimate.BOTTOM: "bottom"
 }
 
 
