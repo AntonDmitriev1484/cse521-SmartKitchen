@@ -207,6 +207,9 @@ class ThreadSafeTrilaterationMap:
                 BeaconInfo(self.ip_to_name[key][0], self.ip_to_name[key][1]) # Create a new BeaconInfo object if not present
                 )
             
+            if not self.ip_to_name[key][1]:
+                print(self.ip_to_name[key][0])
+            
             # No idea why it doesn't make it in here for distractor
             # if key == "[0]C3:00:00:0B:1A:7A":
             #     print("Updating rssi for distractor")

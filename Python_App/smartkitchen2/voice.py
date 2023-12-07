@@ -16,9 +16,9 @@ def requires(inputArray):
     print(volume)  # printing current volume level
     engine.setProperty('volume', 1.0)  # setting up volume level  between 0 and 1
 
-    """VOICE"""
-    voices = engine.getProperty('voices')  # getting details of current voice
-    # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
+    # """VOICE"""
+    # voices = engine.getProperty('voices')  # getting details of current voice
+    # # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
 
     engine.say("Put the following items on the table.")
     engine.runAndWait()
@@ -44,6 +44,7 @@ def distractorPresent(ItemName, ItemLoc):
     # engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
     location = util.LocationEstimateToString[ItemLoc]
     outputString = "Distractor present, remove the " + ItemName + " from the " + location + " of the table."
+    if location == "uncertain": outputString = "Distractor present, remove it from the table."
     print(outputString)
     engine.say(outputString)
     engine.runAndWait()
@@ -101,16 +102,13 @@ def Congrats():
     print(rate)  # printing current voice rate
     engine.setProperty('rate', 100)  # setting up new voice rate
 
+    requireString = "Congratulations, all of the items are on the table and you may now enjoy your piping hot bowl of oatmeal!"
 
     """VOLUME"""
     volume = engine.getProperty('volume')  # getting to know current volume level (min=0 and max=1)
     print(volume)  # printing current volume level
     engine.setProperty('volume', 1.0)  # setting up volume level  between 0 and 1
 
-    """VOICE"""
-    voices = engine.getProperty('voices')  # getting details of current voice
-    engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-    outputText = "All items are on the table! Congrats!"
-    engine.say(outputText)
+    engine.say(requireString)
     engine.runAndWait()
     engine.stop()

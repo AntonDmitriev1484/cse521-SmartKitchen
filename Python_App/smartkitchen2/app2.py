@@ -25,15 +25,15 @@ def recv_enum(i):
 
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
-  "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True),
-  "[0]C3:00:00:0B:1A:79": ("Distractor", False),
-  "[0]C3:00:00:0B:1A:7B" : ("Salt", True),
+   "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True),
+   "[0]C3:00:00:0B:1A:79": ("Distractor", False),
+   "[0]C3:00:00:0B:1A:7B" : ("Salt", True),
 #   "Placeholder" : ("1 Measure Cup", True),
-  "[0]C3:00:00:0B:1A:86" : ("½ Measure Cup", True),
-  "[0]C3:00:00:0B:1A:8A" : ("¼ Measure Spoon", True),
+   "[0]C3:00:00:0B:1A:86" : ("½ Measure Cup", True),
+   "[0]C3:00:00:0B:1A:8A" : ("¼ Measure Spoon", True),
   "[0]C3:00:00:0B:1A:88" : ("Calibrator", True),
 #   "Placeholder" : ("Stirring Spoon", True),
-  "[0]C3:00:00:0B:1A:87" : ("Timer", True),
+   "[0]C3:00:00:0B:1A:87" : ("Timer", True),
   "[0]C3:00:00:0B:1A:89" : ("Bowl", True),
 #   "Placeholder" : ("Metal Spoon", True),
 #   "[0]C3:00:00:0B:1A:XX" : ("Cork Hot Pad", True),
@@ -142,19 +142,12 @@ def main():
         item_required = None # For saying only one item at a time
         proceed = True
 
-
-        # Before performing any logic, check if all items that we need are on the table.
-        # If so, voice Congrats()
-        all_items_required_on_table = True
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if beacon_info.required_item and (beacon_info.loc_estimate == util.LocationEstimate.OFF):
-                all_items_required_on_table = False
-                break
-        if all_items_required_on_table:
-            voice.Congrats()
+            if not beacon_info:
+                print("HOW TF IS BEACON INFO NONTHING HERE")
+                print(beacon_addr)
 
-        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if not (beacon_info.name == "Calibrator"):
+            elif not (beacon_info.name == "Calibrator"):
 
                 (pos, isOnTable) = locate(beacon_addr, trilateration_table)
                 beacon_info.loc_estimate = pos
@@ -164,6 +157,7 @@ def main():
                 if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
                     beaconLocation = beacon_info.loc_estimate
                     voice.distractorPresent(beacon_info.name, beaconLocation)
+                    
                     proceed = False
                     break
                 # Some item we require is not on the table
@@ -172,8 +166,19 @@ def main():
                         # items_required.append(beacon_info.name)
                         item_required = [beacon_info.name] # Note: voice.requires runs split on input param
                         proceed = True
-           
-        if proceed and not all_items_required_on_table:
+
+        # Before performing any logic, check if all items that we need are on the table.
+        # If so, voice Congrats()
+        all_items_required_on_table = True
+        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
+            if beacon_info.required_item and (beacon_info.loc_estimate == util.LocationEstimate.OFF) and beacon_info.name != "Calibrator":
+                all_items_required_on_table = False
+                print(f"NOT DONE: Need {beacon_info.name}")
+                break
+        if all_items_required_on_table:
+            print("Congrats")
+            voice.Congrats()
+        elif proceed:
             voice.requires(item_required)
 
 if __name__ == '__main__':
