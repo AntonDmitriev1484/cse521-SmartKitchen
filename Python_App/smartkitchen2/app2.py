@@ -21,22 +21,16 @@ def recv_enum(i):
         if recv.value == i:
             return recv
 
-
-
 # Maps ip -> (Name, T=valid item / F=distractor)
 IP_TO_NAME = {
    "[0]C3:00:00:0B:1A:7C": ("Oatmeal", True),
    "[0]C3:00:00:0B:1A:79": ("Distractor", False),
    "[0]C3:00:00:0B:1A:7B" : ("Salt", True),
-#   "Placeholder" : ("1 Measure Cup", True),
    "[0]C3:00:00:0B:1A:86" : ("½ Measure Cup", True),
    "[0]C3:00:00:0B:1A:8A" : ("¼ Measure Spoon", True),
   "[0]C3:00:00:0B:1A:88" : ("Calibrator", True),
-#   "Placeholder" : ("Stirring Spoon", True),
    "[0]C3:00:00:0B:1A:87" : ("Timer", True),
   "[0]C3:00:00:0B:1A:89" : ("Bowl", True),
-#   "Placeholder" : ("Metal Spoon", True),
-#   "[0]C3:00:00:0B:1A:XX" : ("Cork Hot Pad", True),
 }
 PAN_ADDR = "[0]C3:00:00:0B:1A:88"       # temp
 TIMER_ADDR = "[0]C3:00:00:0B:1A:87"     # temp
@@ -50,6 +44,51 @@ ACTIVATION_MARGIN = 5	# this should be a margin to ignore "noise" in receiver
 						# may need a threshold margin per receiver
 ON_TABLE_MARGIN = 10     # an margin for determining what is on table (pos --> less strict bounds)
 CALIB_RSSI = [0,0,0,0]		# the offset and threshold per RSSI at ith index
+
+
+EXPECTED_ONTABLE_ESTIMATES = {
+    "Salt" : util.LocationEstimate.TOP,
+    "Oatmeal" : util.LocationEstimate.LEFT,
+    "Distractor" : util.LocationEstimate.RIGHT,
+    "Timer" : util.LocationEstimate.BOTTOM 
+}
+
+EXPECTED_OFFTABLE_ESTIMATES = {
+    "Bowl" : util.LocationEstimate.OFF,
+}
+
+ESTIMATE_COUNTER = {
+    "Salt" : {
+        "Complete": False,
+        "Total" : 0,
+        "Correct" : 0,
+        "Incorrect" : 0
+    },
+    "Oatmeal" : {
+                "Complete": False,
+                "Total" : 0,
+        "Correct" : 0,
+        "Incorrect" : 0
+    },
+    "Distractor" : {
+                "Complete": False,
+                "Total" : 0,
+        "Correct" : 0,
+        "Incorrect" : 0
+    },
+    "Timer" : {
+                "Complete": False,
+                "Total" : 0,
+        "Correct" : 0,
+        "Incorrect" : 0
+    },
+    "Bowl" : {
+        "Complete": False,
+        "Total" : 0,
+        "Correct" : 0,
+        "Incorrect" : 0
+    }
+}
 
 
 """ HELPER FUNCTIONS """
@@ -86,27 +125,12 @@ def locate(beacon_addr, trilateration_table):
     dir_recvs = {rssi_offsets_sorted[0][1], rssi_offsets_sorted[1][1]}              # set of first two strongest RSSIs
     if (Recv.TOP_LEFT in dir_recvs and Recv.TOP_RIGHT in dir_recvs):
         pos = util.LocationEstimate.TOP
-        # Check for bounds (must be within BOTH TOP receivers)
-        # if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.TOP_RIGHT.value]):
-        #     on_table = True
-
     elif (Recv.BOT_LEFT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         pos = util.LocationEstimate.BOTTOM
-        # Bounds check
-        # if (in_bounds[Recv.BOT_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
-        #     on_table = True
-
     elif (Recv.TOP_LEFT in dir_recvs and Recv.BOT_LEFT in dir_recvs):
         pos = util.LocationEstimate.LEFT
-        # Bounds check
-        # if (in_bounds[Recv.TOP_LEFT.value] and in_bounds[Recv.BOT_RIGHT.value]):
-        #     on_table = True
-
     elif (Recv.TOP_RIGHT in dir_recvs and Recv.BOT_RIGHT in dir_recvs):
         pos = util.LocationEstimate.RIGHT
-        # Bounds check
-        # if (in_bounds[Recv.TOP_RIGHT.value] and in_bounds[Recv.BOT_RIGHT.value]):
-        #     on_table = True
     else:
         pos = util.LocationEstimate.IDK
 
@@ -132,54 +156,61 @@ def main():
     while True:
         trilateration_table.print()
         print("\n")
-        time.sleep(1)
+        time.sleep(1) # Once per second is when we would expect to get updates from all beacons (not at all the case)
         calibrate(trilateration_table,0)  # perform instantaneous calibration
 
-        # Temporarily commenting out Jason code (UP TO DATE)
-        time.sleep(7)
-
-        # items_required = []
-        item_required = None # For saying only one item at a time
-        proceed = True
+        all_complete = True
+        SAMPLES = 60
 
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if not beacon_info:
-                print("HOW TF IS BEACON INFO NONTHING HERE")
-                print(beacon_addr)
+            
+            if beacon_info.name in ESTIMATE_COUNTER.keys() and not ESTIMATE_COUNTER[beacon_info.name]["Complete"]:
 
-            elif not (beacon_info.name == "Calibrator"):
+                estimated_loc = locate(beacon_addr, trilateration_table)
+                expected_loc = None
+                if beacon_info.name in EXPECTED_ONTABLE_ESTIMATES.keys:
+                    # If its physically on the table, get its expect value from ontable expected
+                    expected_loc = EXPECTED_ONTABLE_ESTIMATES[beacon_info.name]
+                else: 
+                    # Otherwise it must be off the table (ex. Bowl), get expected value from offtable expected
+                    expected_loc = EXPECTED_OFFTABLE_ESTIMATES[beacon_info.name]
 
-                (pos, isOnTable) = locate(beacon_addr, trilateration_table)
-                beacon_info.loc_estimate = pos
-                if not isOnTable: beacon_info.loc_estimate = util.LocationEstimate.OFF
+                if estimated_loc == expected_loc:
+                    ESTIMATE_COUNTER[beacon_info.name]["Correct"] += 1
+                else:
+                    ESTIMATE_COUNTER[beacon_info.name]["Incorrect"] += 1
 
-                # Distractor
-                if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
-                    beaconLocation = beacon_info.loc_estimate
-                    voice.distractorPresent(beacon_info.name, beaconLocation)
-                    
-                    proceed = False
-                    break
-                # Some item we require is not on the table
-                elif beacon_info.required_item:
-                    if beacon_info.loc_estimate == util.LocationEstimate.OFF:
-                        # items_required.append(beacon_info.name)
-                        item_required = [beacon_info.name] # Note: voice.requires runs split on input param
-                        proceed = True
+                ESTIMATE_COUNTER[beacon_info.name]["Total"] += 1
+                
+                ESTIMATE_COUNTER[beacon_info.name]["Complete"] = (ESTIMATE_COUNTER[beacon_info.name]["Total"]) == SAMPLES
 
-        # Before performing any logic, check if all items that we need are on the table.
-        # If so, voice Congrats()
-        all_items_required_on_table = True
-        for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            if beacon_info.required_item and (beacon_info.loc_estimate == util.LocationEstimate.OFF) and beacon_info.name != "Calibrator":
-                all_items_required_on_table = False
-                print(f"NOT DONE: Need {beacon_info.name}")
-                break
-        if all_items_required_on_table:
-            print("Congrats")
-            voice.Congrats()
-        elif proceed:
-            voice.requires(item_required)
+
+            # Break out of the loop once we have taken 60 samples for each item
+            for (name, data) in ESTIMATE_COUNTER.items():
+                all_complete = all_complete and ESTIMATE_COUNTER[beacon_info.name]["Complete"]
+            if all_complete: break
+        
+        if all_complete: break
+
+    true_positive = 0
+    false_positive = 0
+    for name in EXPECTED_ONTABLE_ESTIMATES.keys():
+        true_positive += ESTIMATE_COUNTER[name]["Correct"]
+        false_positive += ESTIMATE_COUNTER[name]["Incorrect"]
+
+    true_negative = 0
+    false_negative = 0
+    for name in EXPECTED_OFFTABLE_ESTIMATES.keys():
+        true_negative += ESTIMATE_COUNTER[name]["Correct"]
+        false_negative += ESTIMATE_COUNTER[name]["Incorrect"]
+
+    print("Trial outputs: ")
+    print(true_positive+", "+false_positive+", "+true_negative+", "+false_negative)
+    # Outputs: TP, FP, TN, FN
+
+
+
+
 
 if __name__ == '__main__':
     main()
