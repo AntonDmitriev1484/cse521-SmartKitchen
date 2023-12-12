@@ -46,27 +46,12 @@ ON_TABLE_MARGIN = 10     # an margin for determining what is on table (pos --> l
 CALIB_RSSI = [0,0,0,0]		# the offset and threshold per RSSI at ith index
 
 
-EXPECTED_ONTABLE_ESTIMATES = {
-    "Salt" : util.LocationEstimate.TOP,
-    "Oatmeal" : util.LocationEstimate.LEFT,
-    "Distractor" : util.LocationEstimate.RIGHT,
-    "Timer" : util.LocationEstimate.BOTTOM 
-}
-
-EXPECTED_OFFTABLE_ESTIMATES = {
-    "Bowl" : util.LocationEstimate.OFF,
-}
-
 class ExprData:
     def __init__(self, expected_loc):
         self.expected_loc = expected_loc
 
-        if self.expected_loc != util.LocationEstimate.OFF:
-            self.expected_on_table = True
-            self.correct_table_region = 0
-            self.incorrect_table_region = 0
-        else:
-            self.expected_on_table = False
+        self.correct_table_region = 0
+        self.incorrect_table_region = 0
 
         self.correct = 0
         self.incorrect = 0
@@ -74,33 +59,64 @@ class ExprData:
         self.complete = False
         self.num_points = 0
 
+    def toString(self):
+        return " Correct: "+str(self.correct)+" Incorrect: "+str(self.incorrect)
+
     def add_data(self, estimated_loc):
 
         if self.num_points >= 60:
             self.complete = True
             return
 
-        if self.expected_on_table and (estimated_loc != util.LocationEstimate.OFF):
+        if (self.expected_loc == util.LocationEstimate.OFF):
+            # You expect it to be off the table
+            if (estimated_loc == util.LocationEstimate.OFF):
+                self.correct +=1
+            else: self.incorrect += 1
+
+        else: # You expect it to be on the table
+            if (estimated_loc == util.LocationEstimate.OFF):
+                self.incorrect +=1
+            else: # It is on the table, as expected
                 self.correct += 1
                 if estimated_loc == self.expected_loc:
                     self.correct_table_region += 1
                 else: 
-                    self.incorrect_table_region +=1
-        elif (not self.expected_on_table) and (estimated_loc == util.LocationEstimate.OFF):
-                self.correct += 1
-        else:
-            self.incorrect += 1
+                    self.incorrect_table_region +=1            
 
         self.num_points += 1
 
-ESTIMATE_COUNTER = {
+# Clockwise rotation of all items to simulate motion
+ESTIMATE_COUNTER = [
+     { # state 0, # box at bottom right
     "Salt" : ExprData(util.LocationEstimate.TOP),
     "Oatmeal" : ExprData(util.LocationEstimate.LEFT),
     "Distractor" : ExprData(util.LocationEstimate.RIGHT),
     "Timer" : ExprData(util.LocationEstimate.BOTTOM),
     "Bowl" : ExprData(util.LocationEstimate.OFF),
-}
-
+    },  
+    { # state 1, # box at top right
+    "Salt" : ExprData(util.LocationEstimate.RIGHT),
+    "Oatmeal" : ExprData(util.LocationEstimate.TOP),
+    "Distractor" : ExprData(util.LocationEstimate.BOTTOM),
+    "Timer" : ExprData(util.LocationEstimate.LEFT),
+        "Bowl" : ExprData(util.LocationEstimate.OFF),
+    },  
+    { # state 2, # box at top left
+    "Salt" : ExprData(util.LocationEstimate.BOTTOM),
+    "Oatmeal" : ExprData(util.LocationEstimate.RIGHT),
+    "Distractor" : ExprData(util.LocationEstimate.LEFT),
+    "Timer" : ExprData(util.LocationEstimate.TOP),
+        "Bowl" : ExprData(util.LocationEstimate.OFF),
+    },
+    { # state 3, # box at bottom left
+    "Salt" : ExprData(util.LocationEstimate.LEFT),
+    "Oatmeal" : ExprData(util.LocationEstimate.BOTTOM),
+    "Distractor" : ExprData(util.LocationEstimate.TOP),
+    "Timer" : ExprData(util.LocationEstimate.RIGHT),
+        "Bowl" : ExprData(util.LocationEstimate.OFF),
+    }
+    ]
 
 """ HELPER FUNCTIONS """
 
@@ -163,10 +179,15 @@ def main():
     scanner_thread.start()
 
     # Blocks for 15 seconds to callibrate the table's RSSI bounds
-    calibrate(trilateration_table, 6)
+    calibrate(trilateration_table, 15)
 
     item_required = None # For saying only one item at a time
     proceed = True
+
+    # CHANGE THIS AS YOU CHANGE THE PHYSICAL SETUP
+    EXPR_STATE = 3
+
+    print(ESTIMATE_COUNTER[EXPR_STATE].keys())
 
     while True:
         trilateration_table.print()
@@ -182,31 +203,21 @@ def main():
                 print("HOW TF IS BEACON INFO NONTHING HERE")
                 print(beacon_addr)
             elif not (beacon_info.name == "Calibrator"):
+
                 (pos, isOnTable) = locate(beacon_addr, trilateration_table)
                 beacon_info.loc_estimate = pos
-                if not isOnTable: beacon_info.loc_estimate = util.LocationEstimate.OFF
+                if not isOnTable:
+                    beacon_info.loc_estimate = util.LocationEstimate.OFF
+                    pos = util.LocationEstimate.OFF
+
+                # It only adds data points when it is measured as on the table why the fuck
+
                 # EXPERIMENT DATA TRACKING
-                if beacon_info.name in ESTIMATE_COUNTER.keys():
-                    # (pos, isontable) = locate(beacon_addr, trilateration_table)
-                    # if not isontable: beacon_info.location = util.LocationEstimate.OFF
-                    # else: beacon_info.location = pos
-                    ESTIMATE_COUNTER[beacon_info.name].add_data(beacon_info.loc_estimate)
-                # Distractor
-                if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
-                    beaconLocation = beacon_info.loc_estimate
-                    proceed = False
-                    break
-                # Some item we require is not on the table
-                elif beacon_info.required_item:
-                    if beacon_info.loc_estimate == util.LocationEstimate.OFF:
-                        # items_required.append(beacon_info.name)
-                        item_required = [beacon_info.name] # Note: voice.requires runs split on input param
-                        proceed = True
-
-
+                if beacon_info.name in ESTIMATE_COUNTER[EXPR_STATE].keys():
+                    ESTIMATE_COUNTER[EXPR_STATE][beacon_info.name].add_data(pos)
 
             # Break out of the loop once we have taken 60 samples for each item
-            for (name, data) in ESTIMATE_COUNTER.items():
+            for (name, data) in ESTIMATE_COUNTER[EXPR_STATE].items():
                 if name == beacon_info.name:
                     print(" datapoints "+str(data.num_points))
                     all_complete = all_complete and data.complete
@@ -227,10 +238,11 @@ def main():
     correct_region_loc_on_tabletop = 0 
     incorrect_region_loc_on_tabletop = 0
 
-    print("Bowl correct="+str(ESTIMATE_COUNTER["Bowl"].correct)+" incorrect="+str(ESTIMATE_COUNTER["Bowl"].incorrect))
+    for (name, data) in ESTIMATE_COUNTER[EXPR_STATE].items():
+        print(name)
+        print(data.toString())
 
-    for (name, data) in ESTIMATE_COUNTER.items():
-        if data.expected_on_table:
+        if data.expected_loc != util.LocationEstimate.OFF:
             correct_detection_on_tabletop += data.correct
             incorrect_detection_off_tabletop += data.incorrect
 

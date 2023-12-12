@@ -202,19 +202,14 @@ class ThreadSafeTrilaterationMap:
     def update_rssi(self, key, rssi_value, scanner_id):
         with self.lock:
 
-            info = self.inner_map.get(
-                key,
-                BeaconInfo(self.ip_to_name[key][0], self.ip_to_name[key][1]) # Create a new BeaconInfo object if not present
-                )
-            
-            # if not self.ip_to_name[key][1]:
-            #     print(self.ip_to_name[key][0])
-            
-            # No idea why it doesn't make it in here for distractor
-            # if key == "[0]C3:00:00:0B:1A:7A":
-            #     print("Updating rssi for distractor")
-            
-            info.add_data(scanner_id, round(rssi_value, 2)) # Add new data to our rolling average
-            # info.loc_estimate = self.get_location_3(info) # Use updated beacon data to update the location estimate
-            info.loc_estimate = self.get_location_4(info) # Use updated beacon data to update the location estimate
-            self.inner_map[key] = info
+            target = ['Salt','Timer','Oatmeal','Calibrator','Distractor','Bowl']
+            if self.ip_to_name[key][0] in target:
+                info = self.inner_map.get(
+                    key,
+                    BeaconInfo(self.ip_to_name[key][0], self.ip_to_name[key][1]) # Create a new BeaconInfo object if not present
+                    )
+                
+                info.add_data(scanner_id, round(rssi_value, 2)) # Add new data to our rolling average
+                # info.loc_estimate = self.get_location_3(info) # Use updated beacon data to update the location estimate
+                info.loc_estimate = self.get_location_4(info) # Use updated beacon data to update the location estimate
+                self.inner_map[key] = info
