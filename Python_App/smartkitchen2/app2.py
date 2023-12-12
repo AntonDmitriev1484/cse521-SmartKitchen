@@ -163,7 +163,10 @@ def main():
     scanner_thread.start()
 
     # Blocks for 15 seconds to callibrate the table's RSSI bounds
-    calibrate(trilateration_table, 15)
+    calibrate(trilateration_table, 6)
+
+    item_required = None # For saying only one item at a time
+    proceed = True
 
     while True:
         trilateration_table.print()
@@ -172,24 +175,35 @@ def main():
         calibrate(trilateration_table,0)  # perform instantaneous calibration
 
         all_complete = True
-        SAMPLES = 60
 
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
 
-            # if beacon_info.name == "Calibrator": 
-            #     (pos, isontable) = locate(beacon_addr, trilateration_table)
-            #     if not isontable: beacon_info.location = util.LocationEstimate.OFF
-            #     else: beacon_info.location = pos
+            if not beacon_info:
+                print("HOW TF IS BEACON INFO NONTHING HERE")
+                print(beacon_addr)
+            elif not (beacon_info.name == "Calibrator"):
+                (pos, isOnTable) = locate(beacon_addr, trilateration_table)
+                beacon_info.loc_estimate = pos
+                if not isOnTable: beacon_info.loc_estimate = util.LocationEstimate.OFF
+                # EXPERIMENT DATA TRACKING
+                if beacon_info.name in ESTIMATE_COUNTER.keys():
+                    # (pos, isontable) = locate(beacon_addr, trilateration_table)
+                    # if not isontable: beacon_info.location = util.LocationEstimate.OFF
+                    # else: beacon_info.location = pos
+                    ESTIMATE_COUNTER[beacon_info.name].add_data(beacon_info.loc_estimate)
+                # Distractor
+                if not beacon_info.required_item and not beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                    beaconLocation = beacon_info.loc_estimate
+                    proceed = False
+                    break
+                # Some item we require is not on the table
+                elif beacon_info.required_item:
+                    if beacon_info.loc_estimate == util.LocationEstimate.OFF:
+                        # items_required.append(beacon_info.name)
+                        item_required = [beacon_info.name] # Note: voice.requires runs split on input param
+                        proceed = True
 
-            if beacon_info.name in ESTIMATE_COUNTER.keys():
 
-                (pos, isontable) = locate(beacon_addr, trilateration_table)
-                if not isontable: beacon_info.location = util.LocationEstimate.OFF
-                else: beacon_info.location = pos
-
-                data = ESTIMATE_COUNTER[beacon_info.name]
-                #beacon_info.loc_estimate = locate(beacon_addr, trilateration_table)[0]
-                data.add_data(beacon_info.loc_estimate)
 
             # Break out of the loop once we have taken 60 samples for each item
             for (name, data) in ESTIMATE_COUNTER.items():
@@ -198,6 +212,9 @@ def main():
                     all_complete = all_complete and data.complete
 
             if all_complete: break
+
+
+
         if all_complete: break
 
 
