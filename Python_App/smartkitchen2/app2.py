@@ -57,37 +57,48 @@ EXPECTED_OFFTABLE_ESTIMATES = {
     "Bowl" : util.LocationEstimate.OFF,
 }
 
+class ExprData:
+    def __init__(self, expected_loc):
+        self.expected_loc = expected_loc
+
+        if self.expected_loc != util.LocationEstimate.OFF:
+            self.expected_on_table = True
+            self.correct_table_region = 0
+            self.incorrect_table_region = 0
+        else:
+            self.expected_on_table = False
+
+        self.correct = 0
+        self.incorrect = 0
+
+        self.complete = False
+        self.num_points = 0
+
+    def add_data(self, estimated_loc):
+
+        if self.num_points >= 60:
+            self.complete = True
+            return
+
+        if self.expected_on_table and (estimated_loc != util.LocationEstimate.OFF):
+                self.correct += 1
+                if estimated_loc == self.expected_loc:
+                    self.correct_table_region += 1
+                else: 
+                    self.incorrect_table_region +=1
+        elif (not self.expected_on_table) and (estimated_loc == util.LocationEstimate.OFF):
+                self.correct += 1
+        else:
+            self.incorrect += 1
+
+        self.num_points += 1
+
 ESTIMATE_COUNTER = {
-    "Salt" : {
-        "Complete": False,
-        "Total" : 0,
-        "Correct" : 0,
-        "Incorrect" : 0
-    },
-    "Oatmeal" : {
-                "Complete": False,
-                "Total" : 0,
-        "Correct" : 0,
-        "Incorrect" : 0
-    },
-    "Distractor" : {
-                "Complete": False,
-                "Total" : 0,
-        "Correct" : 0,
-        "Incorrect" : 0
-    },
-    "Timer" : {
-                "Complete": False,
-                "Total" : 0,
-        "Correct" : 0,
-        "Incorrect" : 0
-    },
-    "Bowl" : {
-        "Complete": False,
-        "Total" : 0,
-        "Correct" : 0,
-        "Incorrect" : 0
-    }
+    "Salt" : ExprData(util.LocationEstimate.TOP),
+    "Oatmeal" : ExprData(util.LocationEstimate.LEFT),
+    "Distractor" : ExprData(util.LocationEstimate.RIGHT),
+    "Timer" : ExprData(util.LocationEstimate.BOTTOM),
+    "Bowl" : ExprData(util.LocationEstimate.OFF),
 }
 
 
@@ -97,6 +108,7 @@ ESTIMATE_COUNTER = {
 def calibrate(trilateration_table, calib_time):
     time.sleep(calib_time) # Wait to get an average going
     rssi_arr = trilateration_table.get(PAN_ADDR).rssi_array
+    #trilateration_table.print()
 
     for i in range(0,len(rssi_arr)):
         CALIB_RSSI[i] = rssi_arr[i]
@@ -150,8 +162,8 @@ def main():
     scanner_thread = threading.Thread(target=scan_subscriber, args=(trilateration_table,))
     scanner_thread.start()
 
-    # Blocks for 6 seconds to callibrate the table's RSSI bounds
-    calibrate(trilateration_table, 6)
+    # Blocks for 15 seconds to callibrate the table's RSSI bounds
+    calibrate(trilateration_table, 15)
 
     while True:
         trilateration_table.print()
@@ -163,49 +175,63 @@ def main():
         SAMPLES = 60
 
         for (beacon_addr, beacon_info) in trilateration_table.inner_map.items():
-            
-            if beacon_info.name in ESTIMATE_COUNTER.keys() and not ESTIMATE_COUNTER[beacon_info.name]["Complete"]:
 
-                estimated_loc = locate(beacon_addr, trilateration_table)
-                expected_loc = None
-                if beacon_info.name in EXPECTED_ONTABLE_ESTIMATES.keys:
-                    # If its physically on the table, get its expect value from ontable expected
-                    expected_loc = EXPECTED_ONTABLE_ESTIMATES[beacon_info.name]
-                else: 
-                    # Otherwise it must be off the table (ex. Bowl), get expected value from offtable expected
-                    expected_loc = EXPECTED_OFFTABLE_ESTIMATES[beacon_info.name]
+            # if beacon_info.name == "Calibrator": 
+            #     (pos, isontable) = locate(beacon_addr, trilateration_table)
+            #     if not isontable: beacon_info.location = util.LocationEstimate.OFF
+            #     else: beacon_info.location = pos
 
-                if estimated_loc == expected_loc:
-                    ESTIMATE_COUNTER[beacon_info.name]["Correct"] += 1
-                else:
-                    ESTIMATE_COUNTER[beacon_info.name]["Incorrect"] += 1
+            if beacon_info.name in ESTIMATE_COUNTER.keys():
 
-                ESTIMATE_COUNTER[beacon_info.name]["Total"] += 1
-                
-                ESTIMATE_COUNTER[beacon_info.name]["Complete"] = (ESTIMATE_COUNTER[beacon_info.name]["Total"]) == SAMPLES
+                (pos, isontable) = locate(beacon_addr, trilateration_table)
+                if not isontable: beacon_info.location = util.LocationEstimate.OFF
+                else: beacon_info.location = pos
 
+                data = ESTIMATE_COUNTER[beacon_info.name]
+                #beacon_info.loc_estimate = locate(beacon_addr, trilateration_table)[0]
+                data.add_data(beacon_info.loc_estimate)
 
             # Break out of the loop once we have taken 60 samples for each item
             for (name, data) in ESTIMATE_COUNTER.items():
-                all_complete = all_complete and ESTIMATE_COUNTER[beacon_info.name]["Complete"]
+                if name == beacon_info.name:
+                    print(" datapoints "+str(data.num_points))
+                    all_complete = all_complete and data.complete
+
             if all_complete: break
-        
         if all_complete: break
 
-    true_positive = 0
-    false_positive = 0
-    for name in EXPECTED_ONTABLE_ESTIMATES.keys():
-        true_positive += ESTIMATE_COUNTER[name]["Correct"]
-        false_positive += ESTIMATE_COUNTER[name]["Incorrect"]
 
-    true_negative = 0
-    false_negative = 0
-    for name in EXPECTED_OFFTABLE_ESTIMATES.keys():
-        true_negative += ESTIMATE_COUNTER[name]["Correct"]
-        false_negative += ESTIMATE_COUNTER[name]["Incorrect"]
+    correct_detection_on_tabletop = 0
+    incorrect_detection_on_tabletop = 0
+    correct_detection_off_tabletop = 0
+    incorrect_detection_off_tabletop = 0
+
+    # Now, out of all items correctly/incorrectly detected on the tabletop
+    correct_region_loc_on_tabletop = 0 
+    incorrect_region_loc_on_tabletop = 0
+
+    print("Bowl correct="+str(ESTIMATE_COUNTER["Bowl"].correct)+" incorrect="+str(ESTIMATE_COUNTER["Bowl"].incorrect))
+
+    for (name, data) in ESTIMATE_COUNTER.items():
+        if data.expected_on_table:
+            correct_detection_on_tabletop += data.correct
+            incorrect_detection_off_tabletop += data.incorrect
+
+            correct_region_loc_on_tabletop += data.correct_table_region
+            incorrect_region_loc_on_tabletop += data.incorrect_table_region
+        else: # if you expect it to be off of the table
+            correct_detection_off_tabletop += data.correct
+            incorrect_detection_on_tabletop += data.incorrect # why here
 
     print("Trial outputs: ")
-    print(true_positive+", "+false_positive+", "+true_negative+", "+false_negative)
+    print("correct_detection_on_table="+str(correct_detection_on_tabletop))
+    print("incorrect_detection_on_table="+str(incorrect_detection_on_tabletop))
+    print("correct_detection_off_table="+str(correct_detection_off_tabletop))
+    print("incorrect_detection_off_table="+str(incorrect_detection_off_tabletop))
+
+    print("correct_region_loc_on_tabletop="+str(correct_region_loc_on_tabletop))
+    print("incorrect_region_loc_on_tabletop="+str(incorrect_region_loc_on_tabletop))
+
     # Outputs: TP, FP, TN, FN
 
 
